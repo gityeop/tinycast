@@ -50,7 +50,7 @@ final class ExtensionOAuthSession {
     /// Deep links from the app delegate, such as `raycast://oauth?code=…`.
     static func handleCallbackURL(_ url: URL) -> Callback {
         guard let scheme = url.scheme?.lowercased(),
-            scheme == "raycast" || scheme == "tinycast" || scheme == "com.raycast"
+            scheme == "oncast" || scheme == "raycast" || scheme == "tinycast" || scheme == "com.raycast"
         else { return .ignored }
 
         let host = url.host?.lowercased() ?? ""

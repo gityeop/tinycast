@@ -1,5 +1,11 @@
 # Third-party notices
 
+## Oncast and Tinycast
+
+Oncast modifications: Copyright (C) 2026 Sang Yeop Lim.
+Original Tinycast: Copyright (C) 2026 Abue Ammar.
+Both are distributed under the GNU Affero General Public License v3 — see [LICENSE](LICENSE).
+
 Tinycast is licensed under the GNU Affero General Public License v3 — see [LICENSE](LICENSE). It
 also redistributes the third-party material recorded below, under the terms stated for each.
 

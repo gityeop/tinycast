@@ -1,7 +1,6 @@
 import Foundation
 
-/// An `extensions` deep link: `raycast://extensions/<owner>/<extension>/<command>?arguments={…}`.
-/// `tinycast://` mirrors it so our own links never depend on Raycast winning the scheme.
+/// Installed commands accept Oncast links and existing Tinycast and Raycast addresses.
 struct ExtensionDeepLink: Sendable, Equatable {
     let ownerOrAuthor: String?
     let extensionName: String
@@ -24,7 +23,15 @@ struct ExtensionDeepLink: Sendable, Equatable {
 
     static func claims(_ url: URL) -> Bool {
         guard let scheme = url.scheme?.lowercased() else { return false }
-        return ["raycast", "tinycast", "com.raycast", "raycastinternal"].contains(scheme)
+        return ["oncast", "raycast", "tinycast", "com.raycast", "raycastinternal"].contains(scheme)
+    }
+
+    static func url(extensionName: String, commandName: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = "oncast"
+        components.host = "extensions"
+        components.path = "/\(extensionName)/\(commandName)"
+        return components.url
     }
 
     /// Host and first path segment unify `raycast://extensions/…` and `com.raycast:/extensions/…`.

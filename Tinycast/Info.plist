@@ -27,6 +27,7 @@
 			<string>Raycast and Oncast URL Scheme</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>oncast</string>
 				<string>raycast</string>
 				<string>raycast-x</string>
 				<string>tinycast</string>
@@ -75,6 +76,6 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Oncast uses Bluetooth access only when you run the Toggle Bluetooth action.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Oncast, based on Tinycast © 2026 Abue Ammar</string>
+	<string>Oncast modifications © 2026 Sang Yeop Lim · AGPL-3.0</string>
 </dict>
 </plist>

@@ -899,6 +899,10 @@ struct ExtensionTests {
         check(
             "handleCallbackURL reports an expired callback",
             ExtensionOAuthSession.handleCallbackURL(strayURL) == .expired)
+        check(
+            "Oncast reports an expired callback",
+            ExtensionOAuthSession.handleCallbackURL(URL(string: "oncast://oauth?code=abc&state=xyz")!)
+                == .expired)
     }
 
     static func deepLinkChecks() {
@@ -917,6 +921,14 @@ struct ExtensionTests {
         let tiny = ExtensionDeepLink.parse(
             url: URL(string: "tinycast://extensions/linear/linear/create-issue")!)
         check("deeplink mirrors raycast:// as tinycast://", tiny == canonical)
+
+        let copied = ExtensionDeepLink.url(extensionName: "linear/linear", commandName: "create-issue")
+        check(
+            "copied deeplink uses the Oncast scheme",
+            copied?.absoluteString == "oncast://extensions/linear/linear/create-issue")
+        check(
+            "copied Oncast deeplink resolves the same command",
+            copied.flatMap { ExtensionDeepLink.parse(url: $0) } == canonical)
 
         let bare = ExtensionDeepLink.parse(url: URL(string: "raycast://extensions/demo/search")!)
         check(

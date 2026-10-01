@@ -92,7 +92,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .checkForUpdates: return "Check for Updates"
         case .settings: return "Oncast Settings"
         case .about: return "About Oncast"
-        case .support: return "Support Tinycast (Upstream)"
+        case .support: return "Support Oncast"
         case .quit: return "Quit Oncast"
         }
     }

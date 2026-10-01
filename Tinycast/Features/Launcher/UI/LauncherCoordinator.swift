@@ -290,11 +290,8 @@ final class LauncherCoordinator {
             return CommandDeepLink.url(for: command)
         case .extensionCommand:
             guard let (owner, command) = core.extensions.resolve(app) else { return nil }
-            var components = URLComponents()
-            components.scheme = "tinycast"
-            components.host = "extensions"
-            components.path = "/\(owner.manifest.name)/\(command.name)"
-            return components.url
+            return ExtensionDeepLink.url(
+                extensionName: owner.manifest.name, commandName: command.name)
         default:
             return nil
         }

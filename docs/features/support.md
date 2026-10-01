@@ -1,8 +1,9 @@
 # Support
 
-One window, one checkout link, and a checkbox deciding whether it may ever reopen itself. Every other
-surface — the website's hero and footer, the docs sidebar, the README badge — is a bare link to the
-same URL, so `SupportCoordinator.checkout` is the only place the destination is written down.
+Oncast's support window opens developer Sang Yeop Lim's Ko-fi profile at
+`https://ko-fi.com/yeopmac`. One window, one support link, and a checkbox deciding whether it may
+ever reopen itself. `SupportCoordinator.supportPage` owns the destination used by every app surface.
+The app says the button opens Ko-fi in the browser; payment options belong to that page.
 
 ## Invariants
 
@@ -25,13 +26,13 @@ same URL, so `SupportCoordinator.checkout` is the only place the destination is 
 - **The first ask lands one interval after first run, not after launch.** With no `lastAskedAt` the
   anchor is `firstSeenAt`, stamped the first time the store finds no file, so a fresh install is
   never asked on day one.
-- **One button, one link.** `SupportCoordinator.checkout` is the only destination, and no surface
-  restates what is behind it — the checkout page owns that, so nothing here can fall out of step
-  with it. Adding a second button means adding a second thing to keep in sync.
+- **One button, one link.** `SupportCoordinator.supportPage` is the only destination, and no surface
+  promises a payment method or checkout service. Adding a second button means adding a second
+  thing to keep in sync.
 - **The button is the composition, not its footer.** It sits under the hero at 46pt tall, because this
   window asks where the update window reports — an actions row pinned to the bottom edge reads as a
   utility dialog.
-- **Brand colour appears exactly twice**: the app icon, which is violet on its own, and the button.
+- **The button uses `Theme.Colors.brand`**, while the app icon keeps its own artwork colours.
 - **Support's views are Support's own.** `SupportActionButton` is private to `SupportWindowView`
   rather than reaching for Onboarding's card rows, which are that window's.
 
@@ -41,7 +42,7 @@ same URL, so `SupportCoordinator.checkout` is the only place the destination is 
 | --- | --- |
 | `Model/SupportReminderSchedule.swift` | pure — seconds until the next ask, clamped at both ends |
 | `Service/SupportReminderStore.swift` | the JSON state, and the one `Task` pump that offers the ask |
-| `UI/SupportCoordinator.swift` | the window's lifecycle, the checkout link, the anchor write |
+| `UI/SupportCoordinator.swift` | the window's lifecycle, the Ko-fi link, the anchor write |
 | `UI/SupportWindowView.swift` | the window: hero, the button, and the reminder checkbox |
 
 `SupportReminderStore.advance()` is one turn of the pump: it answers how long to sleep, and calls

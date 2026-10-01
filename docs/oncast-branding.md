@@ -1,10 +1,11 @@
 # Oncast branding
 
-Oncast is the personal Tinycast fork. Its app name and privacy prompts use Oncast;
-upstream support, community links and copyright remain attributed to Tinycast and Abue Ammar.
+Oncast is developed by Sang Yeop Lim. Its app UI, privacy prompts, client labels and copied
+deeplinks use Oncast. About links to byyeop.com, the personal fork and its Issues; Support
+opens ko-fi.com/yeopmac. Original copyright is preserved in LICENSE and bundled NOTICE.
 
-`com.gityeop.tinycast`, `tinycast://`, the `.tinycast` backup format and existing data locations
-remain unchanged. Renaming the app does not require moving preferences or editing Leader Key URLs.
+`com.gityeop.tinycast`, the `.tinycast` backup format and existing data locations remain
+unchanged. New copied links use `oncast://`; existing `tinycast://` URLs are still accepted. Renaming the app does not require moving preferences or editing Leader Key URLs.
 
 ## Icon source
 

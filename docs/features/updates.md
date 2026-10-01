@@ -1,5 +1,10 @@
 # Updates
 
+The Oncast fork uses `gityeop/tinycast` as its release-feed repository. Its
+`com.gityeop.tinycast` bundle is a development channel, so automatic updates remain disabled.
+The upstream channel and Homebrew notes below describe Tinycast.
+
+
 Tinycast checks GitHub Releases once a day, offers the newest release for its own channel in a native
 window with its release notes, installs it and relaunches. There is no Sparkle and no appcast: the
 release feed the website already reads is the feed the app reads.

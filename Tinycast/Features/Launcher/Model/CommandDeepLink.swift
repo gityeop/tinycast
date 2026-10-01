@@ -2,7 +2,9 @@ import Foundation
 
 /// Native commands share the catalog's stable slugs; extension links keep their own parser.
 enum CommandDeepLink {
-    private static let schemes = ["tinycast", "raycast", "raycast-x", "com.raycast", "raycastinternal"]
+    private static let schemes = [
+        "oncast", "tinycast", "raycast", "raycast-x", "com.raycast", "raycastinternal"
+    ]
 
     private static let raycastCommands: [String: CommandID] = [
         "extensions/raycast/raycast/open-camera": .openCamera,
@@ -27,7 +29,7 @@ enum CommandDeepLink {
 
     static func url(for command: CommandID) -> URL? {
         guard !command.isQueryDriven else { return nil }
-        return URL(string: "tinycast://" + command.rawValue.replacingOccurrences(of: ":", with: "/"))
+        return URL(string: "oncast://" + command.rawValue.replacingOccurrences(of: ":", with: "/"))
     }
 
     private static func route(of url: URL) -> String {

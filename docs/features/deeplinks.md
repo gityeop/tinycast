@@ -1,28 +1,29 @@
 # Command deeplinks
 
-This personal fork opens built-in Tinycast commands through `tinycast://command/<slug>` and adds
+Oncast opens built-in commands through `oncast://command/<slug>` and adds
 **Copy Deeplink** to the launcher's **⌘K** actions menu. Select a built-in or installed extension
 command, then use that action or **⇧⌘C**. Paste the resulting address into Leader Key's URL action,
 Shortcuts, or another launcher.
 
 ## Leader Key
 
-| Action | Tinycast address |
+| Action | Oncast address |
 | --- | --- |
-| Search Emoji & Symbols | `tinycast://command/search-emoji` |
-| Open Camera | `tinycast://command/open-camera` |
-| Confetti | `tinycast://command/confetti` |
-| Color Picker | `tinycast://extensions/thomas/color-picker/pick-color` |
+| Search Emoji & Symbols | `oncast://command/search-emoji` |
+| Open Camera | `oncast://command/open-camera` |
+| Confetti | `oncast://command/confetti` |
+| Color Picker | `oncast://extensions/thomas/color-picker/pick-color` |
 
 Color Picker uses the installed Raycast extension and requires extensions to be enabled. Confetti
-is a native command in this fork. Existing links for Raycast's camera, emoji picker, and confetti
+is a native command in this fork. Existing `tinycast://` links remain accepted so saved Leader Key
+actions keep working. Existing links for Raycast's camera, emoji picker, and confetti
 also resolve to these native commands, including the existing `raycast-x://` camera address and
 `tinycast://extensions/raycast/raycast/confetti`.
 
 To test a copied address in Terminal:
 
 ```sh
-open 'tinycast://command/search-emoji'
+open 'oncast://command/search-emoji'
 ```
 
 ## Scope and behavior
@@ -38,7 +39,7 @@ commands report an error. User-created quicklinks, snippets, custom commands, an
 do not receive command deeplinks in this fork.
 
 Installed extension commands keep their existing [extension deeplink format](extensions.md#deeplinks)
-and argument support. Copy Deeplink copies a Tinycast address for that installed command; it does
+and argument support. Copy Deeplink copies an Oncast address for that installed command; it does
 not include values entered in its argument fields.
 
 `CommandDeepLink` owns native parsing and canonical addresses. `AppCore.handleOpenURL` routes native

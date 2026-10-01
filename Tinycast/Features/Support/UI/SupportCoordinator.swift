@@ -5,13 +5,13 @@ import SwiftUI
 @MainActor
 final class SupportCoordinator {
     /// The one place the support page URL is written down; every surface links to this.
-    static let supportPage = URL(string: "https://tinycast.dev/support")!
+    static let supportPage = URL(string: "https://ko-fi.com/yeopmac")!
 
     private let store: SupportReminderStore
     /// Environment injection and activity reads only — never for state this type owns.
     private unowned let core: AppCore
     private lazy var window = AppWindowController(
-        title: "Support Tinycast (Upstream)", contentSize: SupportWindowView.initialSize,
+        title: "Support Oncast", contentSize: SupportWindowView.initialSize,
         activation: core.activationPolicy)
 
     init(store: SupportReminderStore, core: AppCore) {

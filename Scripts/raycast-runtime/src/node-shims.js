@@ -174,16 +174,16 @@ const process = {
   pid: 1,
   ppid: 0,
   env: {},
-  title: "tinycast-extension",
+  title: "oncast-extension",
   stdout: { write: (text) => console.log(String(text).replace(/\n$/, "")), isTTY: false, columns: 80 },
   stderr: { write: (text) => console.error(String(text).replace(/\n$/, "")), isTTY: false, columns: 80 },
   stdin: { on: () => {}, resume: () => {}, pause: () => {}, isTTY: false },
   cwd: () => bootEnvironment.cwd,
   chdir: () => {
-    throw new Error("process.chdir is not supported in Tinycast extensions.");
+    throw new Error("process.chdir is not supported in Oncast extensions.");
   },
   exit: () => {
-    throw new Error("process.exit is not supported in Tinycast extensions.");
+    throw new Error("process.exit is not supported in Oncast extensions.");
   },
   kill(pid, signal = "SIGTERM") {
     hostCallSync("proc", "kill", [Number(pid), signalNumber(signal)]);
@@ -469,7 +469,7 @@ const fs = {
   utimesSync() {},
   futimesSync() {},
   watch() {
-    throw new Error("fs.watch is not supported in Tinycast extensions.");
+    throw new Error("fs.watch is not supported in Oncast extensions.");
   },
   createReadStream(file, options) {
     const target = fsPath(file);
@@ -735,7 +735,7 @@ const childProcess = {
     return new ChildProcess(String(file), args.map(String), options);
   },
   fork() {
-    throw new Error("child_process.fork is not supported in Tinycast extensions.");
+    throw new Error("child_process.fork is not supported in Oncast extensions.");
   },
 };
 
@@ -914,10 +914,10 @@ const zlibImpl = {
   deflateRawSync: zlibSync("deflateRaw"),
   inflateRawSync: zlibSync("inflateRaw"),
   brotliCompressSync: () => {
-    throw new Error("zlib brotli is not supported in Tinycast extensions.");
+    throw new Error("zlib brotli is not supported in Oncast extensions.");
   },
   brotliDecompressSync: () => {
-    throw new Error("zlib brotli is not supported in Tinycast extensions.");
+    throw new Error("zlib brotli is not supported in Oncast extensions.");
   },
   constants: {},
 };
@@ -1628,7 +1628,7 @@ function unsupportedModule(name, extras = {}) {
 const RESERVED_MEMBERS = new Set(["__esModule", "default", "then", "catch", "prototype", "constructor", "toJSON", "inspect", "valueOf", "toString", "length", "name"]);
 
 function makeUnsupported(label) {
-  const reason = `${label} is not supported in Tinycast extensions (no Node runtime). See docs/extensions.md.`;
+  const reason = `${label} is not supported in Oncast extensions (no Node runtime). See docs/extensions.md.`;
   const Unsupported = class {
     constructor() {
       throw new Error(reason);
@@ -1829,7 +1829,7 @@ export const nodeModules = {
 };
 
 function requireStub(name) {
-  throw new Error(`createRequire is not supported in Tinycast extensions (tried to load "${name}").`);
+  throw new Error(`createRequire is not supported in Oncast extensions (tried to load "${name}").`);
 }
 
 // Every remaining Node builtin resolves to a refuse-on-use stub. Bundles reference the whole

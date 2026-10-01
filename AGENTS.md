@@ -1,7 +1,8 @@
 # Tinycast
 
 This personal fork is named **Oncast**. [FORK.md](FORK.md) owns its build and app identity:
-Debug and Release both retain `com.gityeop.tinycast` and `tinycast://` to reuse existing fork settings.
+Debug and Release retain `com.gityeop.tinycast` and accept legacy `tinycast://` URLs.
+New app deeplinks use `oncast://`.
 The remaining channel and release notes below describe upstream Tinycast.
 
 A native macOS menu-bar launcher: fuzzy app launcher, global and per-app hotkeys, a text/image

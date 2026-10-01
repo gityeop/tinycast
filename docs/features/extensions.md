@@ -565,9 +565,9 @@ global Show in launcher switch, or this extension's — because the ranker never
 
 ## Deeplinks
 
-`raycast://extensions/<owner>/<extension>/<command>` runs an installed command from outside the app —
-a browser link, another app, a Shortcut — and `tinycast://` mirrors it so our own links never depend
-on Raycast winning the scheme. Both accept Raycast's query parameters: `arguments` as URL-encoded
+`oncast://extensions/<owner>/<extension>/<command>` runs an installed command from outside the app —
+a browser link, another app, a Shortcut. Existing `tinycast://` and `raycast://` links remain accepted.
+These links accept Raycast's query parameters: `arguments` as URL-encoded
 JSON, `fallbackText`, and `launchType=background`, which only a no-view command receives — a view
 command always takes over the palette, so it launches as `userInitiated`. The owner is a hint: a
 scoped install matches by `owner/extension` first and falls back to the bare slug, so short links
@@ -578,7 +578,7 @@ covered by `Tests/ext-test.swift`; an extension's own `open("raycast://…")` re
 
 This personal fork also handles [native command deeplinks](deeplinks.md) before extension routing.
 In the launcher, select an installed extension command and choose **⌘K → Copy Deeplink** or press
-**⇧⌘C** to copy its `tinycast://extensions/…` address. Argument-field values are not included.
+**⇧⌘C** to copy its `oncast://extensions/…` address. Argument-field values are not included.
 
 For view commands, nonempty `fallbackText` also prefills the search field: lists and grids filter
 locally or receive it through `onSearchTextChange` when their handler mounts. It remains available

@@ -26,6 +26,9 @@ struct CommandDeepLinkTests {
 
     static func leaderKeyLinks() {
         let configured: [(String, CommandID)] = [
+            ("oncast://command/search-emoji", .searchEmoji),
+            ("oncast://command/open-camera", .openCamera),
+            ("oncast://command/confetti", .confetti),
             ("tinycast://command/search-emoji", .searchEmoji),
             ("tinycast://command/open-camera", .openCamera),
             ("tinycast://extensions/raycast/raycast/confetti", .confetti),
@@ -57,7 +60,7 @@ struct CommandDeepLinkTests {
                 check("\(command.name) can be copied", false)
                 continue
             }
-            check("copied \(command.name) opens Tinycast", url.scheme == "tinycast")
+            check("copied \(command.name) opens Oncast", url.scheme == "oncast")
             check(
                 "copied \(command.name) dispatches its original command",
                 CommandDeepLink.parse(url) == command)
@@ -65,19 +68,20 @@ struct CommandDeepLinkTests {
         }
         check(
             "emoji uses the documented address",
-            CommandDeepLink.url(for: .searchEmoji)?.absoluteString == "tinycast://command/search-emoji")
+            CommandDeepLink.url(for: .searchEmoji)?.absoluteString == "oncast://command/search-emoji")
         check(
             "camera uses the documented address",
-            CommandDeepLink.url(for: .openCamera)?.absoluteString == "tinycast://command/open-camera")
+            CommandDeepLink.url(for: .openCamera)?.absoluteString == "oncast://command/open-camera")
         check(
             "confetti copies its native address",
-            CommandDeepLink.url(for: .confetti)?.absoluteString == "tinycast://command/confetti")
+            CommandDeepLink.url(for: .confetti)?.absoluteString == "oncast://command/confetti")
         check("browser query has no input-free link", CommandDeepLink.url(for: .openInBrowser) == nil)
         check("shell query has no input-free link", CommandDeepLink.url(for: .runShellCommand) == nil)
     }
 
     static func invalidNativeLinks() {
         let invalid = [
+            "oncast://command/unknown",
             "tinycast://command/unknown",
             "tinycast://command",
             "tinycast://command/open-camera/extra",
@@ -103,6 +107,8 @@ struct CommandDeepLinkTests {
 
     static func extensionLinks() {
         let addresses = [
+            "oncast://extensions/thomas/color-picker/pick-color",
+            "oncast://extensions/color-picker/pick-color",
             "tinycast://extensions/thomas/color-picker/pick-color",
             "raycast://extensions/thomas/color-picker/pick-color",
             "tinycast://extensions/color-picker/pick-color"
@@ -115,8 +121,24 @@ struct CommandDeepLinkTests {
             check("Color Picker retains its installed extension", link?.extensionName == "color-picker")
             check("Color Picker retains its command", link?.commandName == "pick-color")
         }
-        check(
-            "OAuth callbacks stay with OAuth routing",
-            !CommandDeepLink.claims(URL(string: "tinycast://oauth?code=abc")!))
+        for extensionName in ["thomas/color-picker", "color-picker"] {
+            guard let url = ExtensionDeepLink.url(
+                extensionName: extensionName, commandName: "pick-color")
+            else {
+                check("installed extension command has a copyable address", false)
+                continue
+            }
+            check("copied extension command opens Oncast", url.scheme == "oncast")
+            let link = ExtensionDeepLink.parse(url: url)
+            check(
+                "copied extension link resolves the same install",
+                link?.matches(manifestName: extensionName) == true)
+            check("copied extension link retains its command", link?.commandName == "pick-color")
+        }
+        for scheme in ["oncast", "tinycast"] {
+            check(
+                "OAuth callbacks stay with OAuth routing",
+                !CommandDeepLink.claims(URL(string: "\(scheme)://oauth?code=abc")!))
+        }
     }
 }

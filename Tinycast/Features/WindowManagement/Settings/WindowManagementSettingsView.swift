@@ -127,7 +127,7 @@ private struct WindowCommandSettingsRow: View {
     private var entry: AppEntry {
         AppEntry(
             id: command.entryID, name: command.name,
-            url: URL(string: "tinycast://window-command/" + command.id.rawValue)!, bundleID: nil,
+            url: URL(string: "oncast://window-command/" + command.id.rawValue)!, bundleID: nil,
             kind: .windowCommand)
     }
 

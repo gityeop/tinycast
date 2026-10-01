@@ -4,7 +4,11 @@ Oncast is a personal fork of `abue-ammar/tinycast` for invoking native commands 
 It uses a graphite app icon with a white glitch O and cyan/magenta edges.
 See [the branding reference](docs/oncast-branding.md) for the icon source and preserved app identity.
 
-- Native `tinycast://command/<slug>` links for fixed built-in commands.
+Maintainer: Sang Yeop Lim · [Website](https://byyeop.com) ·
+[Feedback](https://github.com/gityeop/tinycast/issues) · [Ko-fi](https://ko-fi.com/yeopmac).
+App UI uses these destinations; original copyright stays in LICENSE and bundled NOTICE.
+
+- Native `oncast://command/<slug>` links for fixed built-in commands.
 - Launcher **⌘K → Copy Deeplink** and **⇧⌘C** for native and installed extension commands.
 - Native Confetti with the existing Raycast address retained as an alias.
 - External links reveal their destination; ordinary launcher actions and hotkeys keep their behavior.
@@ -37,7 +41,7 @@ helper. The Icon Composer `.icon` bundle is compiled as an app icon rather than 
 
 The result is `build/release/Build/Products/Release/Oncast.app`. The script verifies its
 signature, Hardened Runtime and permission entitlements. App Sandbox remains disabled because
-Tinycast controls other apps through Accessibility and runs extension shell commands.
+Oncast controls other apps through Accessibility and runs extension shell commands.
 
 To notarize with an existing Keychain profile, submit the signed Release app, then staple and verify
 the accepted ticket. Apple Developer agreements must be current before submission.
@@ -54,20 +58,20 @@ spctl --assess --type execute --verbose=2 'build/release/Build/Products/Release/
 ## App identity and existing settings
 
 The app is named **Oncast**, bundle identifier `com.gityeop.tinycast`. Renaming the app keeps
-that identifier and the existing `tinycast://` scheme, so Tinycast Fork settings and Leader Key
-shortcuts continue to work without migration. It keeps its own
+that identifier and accepts existing `tinycast://` URLs, so settings and Leader Key
+shortcuts continue to work without migration. New copied links use `oncast://`. It keeps its own
 preferences and `~/Library/Application Support/com.gityeop.tinycast` data. It uses the development
 update channel, so the upstream updater cannot replace the fork with a release missing these changes.
+The release-feed repository is `gityeop/tinycast`; automatic updates remain disabled for this app.
 Copy existing settings and extensions into those locations once if you want to reuse them.
 
 Launching a test URL explicitly avoids relying on another app's scheme registration:
 
 ```sh
-open -a '/absolute/path/Oncast.app' 'tinycast://command/search-emoji'
+open -a '/absolute/path/Oncast.app' 'oncast://command/search-emoji'
 ```
 
-Leader Key uses the default handler for `tinycast://`. Set that handler to Oncast when
-switching to it. Camera and Accessibility permissions belong to the fork app separately; grant
+Set Oncast as the default handler for `oncast://` and the existing `tinycast://` Leader Key URLs. Camera and Accessibility permissions belong to the fork app separately; grant
 only the permissions needed for the functions you use.
 
 ## Verification

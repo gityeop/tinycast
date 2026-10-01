@@ -265,7 +265,7 @@ export function fileURLToPath(input, options = {}) {
     throw nodeTypeError("ERR_INVALID_URL", "Invalid URL");
   }
   if (options?.windows) {
-    throw new Error("Windows file paths are not supported in Tinycast extensions.");
+    throw new Error("Windows file paths are not supported in Oncast extensions.");
   }
   const hostname = decodedFileHostname(parsed.hostname);
   if (hostname !== "" && hostname.toLowerCase() !== "localhost") {

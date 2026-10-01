@@ -77,7 +77,7 @@ final class HotKeyCenter {
         )
         // Another app may own the combo; the binding stays visible but doesn't fire.
         guard error == noErr, let ref else {
-            NSLog("Tinycast: could not register hotkey for %@ (OSStatus %d)", id, error)
+            NSLog("Oncast: could not register hotkey for %@ (OSStatus %d)", id, error)
             return
         }
         entry.ref = ref

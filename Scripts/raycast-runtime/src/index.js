@@ -36,7 +36,7 @@ defineModule("@raycast/api", raycastApi);
 // react-dom only appears in bundles defensively; make the import resolve and the calls explain.
 defineModule("react-dom", {
   render: () => {
-    throw new Error("react-dom is not available — Tinycast renders extensions natively.");
+    throw new Error("react-dom is not available — Oncast renders extensions natively.");
   },
   createPortal: (children) => children,
   flushSync: (fn) => fn?.(),

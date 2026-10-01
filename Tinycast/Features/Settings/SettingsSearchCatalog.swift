@@ -619,7 +619,7 @@ enum SettingsSearchCatalog {
             group: .aboutLinks, "Links",
             keywords: ["github", "source", "issues", "website"]),
         .init(
-            .aboutLinks, "Support Tinycast",
-            keywords: ["donate", "sponsor", "funding"])
+            .aboutLinks, "Support Oncast",
+            keywords: ["donate", "sponsor", "funding", "ko-fi"])
     ]
 }

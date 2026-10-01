@@ -253,14 +253,14 @@ extension AppEntry {
     init(_ layout: WindowLayout) {
         self.init(
             id: layout.entryID, name: layout.name,
-            url: URL(string: "tinycast://window-layout/" + layout.id.uuidString)!,
+            url: URL(string: "oncast://window-layout/" + layout.id.uuidString)!,
             bundleID: nil, kind: .windowLayout, symbolName: layout.iconSymbol)
     }
 
     init(_ room: Room) {
         self.init(
             id: room.entryID, name: room.name,
-            url: URL(string: "tinycast://window-room/" + room.id.uuidString)!,
+            url: URL(string: "oncast://window-room/" + room.id.uuidString)!,
             bundleID: nil, kind: .windowRoom)
     }
 
@@ -268,7 +268,7 @@ extension AppEntry {
     init(_ size: CustomWindowSize) {
         self.init(
             id: size.entryID, name: size.name,
-            url: URL(string: "tinycast://window-size/" + size.id.uuidString)!,
+            url: URL(string: "oncast://window-size/" + size.id.uuidString)!,
             bundleID: nil, kind: .windowCommand)
     }
 
@@ -276,7 +276,7 @@ extension AppEntry {
     init(_ action: CustomQuickAction) {
         self.init(
             id: action.entryID, name: action.name,
-            url: URL(string: "tinycast://quick-action/" + action.id.uuidString)!,
+            url: URL(string: "oncast://quick-action/" + action.id.uuidString)!,
             bundleID: nil, kind: .quickAction, symbolName: action.iconSymbol)
     }
 
@@ -284,7 +284,7 @@ extension AppEntry {
     init(_ command: CustomCommand) {
         self.init(
             id: command.entryID, name: command.name,
-            url: URL(string: "tinycast://custom-command/" + command.id.uuidString)!,
+            url: URL(string: "oncast://custom-command/" + command.id.uuidString)!,
             bundleID: nil, kind: .customCommand, symbolName: command.iconSymbol)
     }
 
@@ -292,7 +292,7 @@ extension AppEntry {
     init(_ quicklink: Quicklink) {
         self.init(
             id: quicklink.entryID, name: quicklink.name,
-            url: URL(string: "tinycast://quicklink/" + quicklink.id.uuidString)!,
+            url: URL(string: "oncast://quicklink/" + quicklink.id.uuidString)!,
             bundleID: nil, kind: .quicklink,
             symbolName: quicklink.iconSymbol
                 ?? QuicklinkDestination.detect(quicklink.link)?.defaultSymbol)
@@ -361,7 +361,7 @@ final class AppIndex {
         .map { command in
             AppEntry(
                 id: command.entryID, name: command.name,
-                url: URL(string: "tinycast://system-action/" + command.id.rawValue)!,
+                url: URL(string: "oncast://system-action/" + command.id.rawValue)!,
                 bundleID: nil, kind: .systemAction)
         }
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -370,7 +370,7 @@ final class AppIndex {
         .map { command in
             AppEntry(
                 id: command.entryID, name: command.name,
-                url: URL(string: "tinycast://window-command/" + command.id.rawValue)!,
+                url: URL(string: "oncast://window-command/" + command.id.rawValue)!,
                 bundleID: nil, kind: .windowCommand)
         }
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

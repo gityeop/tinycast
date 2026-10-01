@@ -72,10 +72,10 @@ private enum CapsLockRemap {
         do {
             try process.runObservingExit().wait()
             if process.terminationStatus != 0 {
-                NSLog("Tinycast: hidutil remap exited %d", process.terminationStatus)
+                NSLog("Oncast: hidutil remap exited %d", process.terminationStatus)
             }
         } catch {
-            NSLog("Tinycast: hidutil caps lock remap failed: %@", error.localizedDescription)
+            NSLog("Oncast: hidutil caps lock remap failed: %@", error.localizedDescription)
         }
     }
 }
