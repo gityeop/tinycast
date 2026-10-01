@@ -35,6 +35,12 @@ enum AppActionsMenu {
                     core.launcherCoordinator.showInFinder(app)
                 })
         }
+        if core.launcherCoordinator.deeplink(for: app) != nil {
+            items.append(
+                PopoverMenuItem(title: "Copy Deeplink", systemImage: "link", shortcut: "⇧⌘C") {
+                    core.launcherCoordinator.copyDeeplink(for: app)
+                })
+        }
         // A query-driven row lives only for its query, so no preference could outlive it.
         let isPersistent = !CommandCatalog.isQueryDriven(app)
         if isPersistent {

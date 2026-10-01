@@ -1,7 +1,7 @@
 import Foundation
 
 enum CommandCatalog {
-    /// Sorted by name for the `AppIndex` invariant; the URL is a placeholder.
+    /// Sorted by name for the `AppIndex` invariant; each URL names its native command.
     nonisolated static let all: [AppEntry] =
         CommandID.allCases
         .filter { !$0.isQueryDriven }

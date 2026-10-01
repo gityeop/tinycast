@@ -576,6 +576,10 @@ so rather than failing silently. `ExtensionDeepLink` owns the claimed schemes an
 covered by `Tests/ext-test.swift`; an extension's own `open("raycast://…")` resolves through the same
 `ExtensionManager.resolve(_:)` instead of launching Raycast.
 
+This personal fork also handles [native command deeplinks](deeplinks.md) before extension routing.
+In the launcher, select an installed extension command and choose **⌘K → Copy Deeplink** or press
+**⇧⌘C** to copy its `tinycast://extensions/…` address. Argument-field values are not included.
+
 For view commands, nonempty `fallbackText` also prefills the search field: lists and grids filter
 locally or receive it through `onSearchTextChange` when their handler mounts. It remains available
 in the view command's launch props as well.

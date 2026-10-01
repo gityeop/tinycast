@@ -25,6 +25,7 @@ final class AppCore {
         syntheticEventTag: Paster.tinycastEventTag)
     let textInjector: TextInjector
     let hotKeys = HotKeyManager()
+    let confettiCoordinator = ConfettiCoordinator()
     let hyperKeyTap = HyperKeyTap()
     let windowMover = WindowMover()
     let spaceSwitcher = SpaceSwitcher()
@@ -446,6 +447,18 @@ final class AppCore {
         case .ignored:
             break
         }
+        if CommandDeepLink.claims(url) {
+            guard let command = CommandDeepLink.parse(url) else {
+                showMessage("Unsupported command deeplink", tone: .danger)
+                return
+            }
+            guard appIndex.isCommandEnabled(command) else {
+                showMessage("Enable \(command.name) in Settings first", tone: .danger)
+                return
+            }
+            launcherCoordinator.runCommand(command, reveal: true)
+            return
+        }
         guard ExtensionDeepLink.claims(url) else { return }
         guard let link = ExtensionDeepLink.parse(url: url) else {
             paletteCoordinator.showPalette(mode: .launcher, restoreAnyMode: true)
@@ -516,6 +529,7 @@ final class AppCore {
     }
 
     func prepareForTermination() {
+        confettiCoordinator.stop()
         settingsFile?.flush()
         clipboardTextIndexer?.stop()
         // Caps Lock first: its remap is the one teardown that outlives the process.

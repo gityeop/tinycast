@@ -1,5 +1,9 @@
 # Tinycast
 
+This personal fork adds native command deeplinks, **⌘K → Copy Deeplink**, and Confetti.
+See [the fork setup](FORK.md) and [supported deeplinks](docs/features/deeplinks.md).
+The upstream Tinycast description follows.
+
 **A tiny, fully native macOS launcher. One hotkey, everything you reach for all day, under 100 MB of
 RAM.**
 
