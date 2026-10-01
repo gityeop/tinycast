@@ -41,7 +41,7 @@ struct CustomQuickActionEditorPanel: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
             SettingsEditorHeader(
                 title: existing == nil ? "New Quick Action" : "Edit \(existing?.name ?? "")",
-                subtitle: "Tinycast sends your selected text to the model with these instructions."
+                subtitle: "Oncast sends your selected text to the model with these instructions."
             )
 
             HStack(alignment: .bottom, spacing: Theme.Spacing.lg) {
@@ -133,7 +133,7 @@ struct CustomQuickActionEditorPanel: View {
                     }
                 }
             Text(
-                "Tinycast always tells the model to return only the transformed text, and to treat "
+                "Oncast always tells the model to return only the transformed text, and to treat "
                     + "your selection as material rather than as instructions."
             )
             .font(.caption)

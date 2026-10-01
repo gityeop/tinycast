@@ -118,7 +118,7 @@ enum ExtensionHostError: LocalizedError {
         switch self {
         case .noActiveExtension: return "No extension command is running."
         case .unknown(let what): return "Unknown host call '\(what)'."
-        case .unsupported(let what): return "\(what) is not supported in Tinycast extensions."
+        case .unsupported(let what): return "\(what) is not supported in Oncast extensions."
         }
     }
 }

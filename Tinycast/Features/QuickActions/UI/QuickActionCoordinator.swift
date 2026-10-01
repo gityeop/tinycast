@@ -89,7 +89,7 @@ final class QuickActionCoordinator {
                 await core.confirm(
                     title: "Enable Quick Actions?",
                     message:
-                        "Tinycast needs the Accessibility permission to read the text you have "
+                        "Oncast needs the Accessibility permission to read the text you have "
                         + "selected in other apps and replace it. Nothing is read until you press "
                         + "a shortcut.",
                     symbol: "wand.and.sparkles", confirmTitle: "Continue", tone: .neutral,
@@ -249,8 +249,8 @@ final class QuickActionCoordinator {
                 await core.reportFailure(
                     title: "Quick Actions can't read your selection",
                     message:
-                        "Tinycast needs the Accessibility permission to read the text you have "
-                        + "selected and replace it. If Tinycast is already listed, switch it off "
+                        "Oncast needs the Accessibility permission to read the text you have "
+                        + "selected and replace it. If Oncast is already listed, switch it off "
                         + "and on again — a rebuilt app keeps a stale entry.",
                     symbol: "wand.and.sparkles", recovery: "Open System Settings")
             else { return }

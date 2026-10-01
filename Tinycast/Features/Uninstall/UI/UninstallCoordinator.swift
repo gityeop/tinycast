@@ -101,7 +101,7 @@ final class UninstallCoordinator {
             guard await !AppLauncher.showInfoInFinder(candidate.url) else { return }
             await core.showNotice(
                 title: "Couldn’t Open Get Info",
-                message: "Allow Tinycast to control Finder in System Settings › Privacy & Security "
+                message: "Allow Oncast to control Finder in System Settings › Privacy & Security "
                     + "› Automation, then try again.",
                 symbol: "info.circle", tone: .danger)
         }

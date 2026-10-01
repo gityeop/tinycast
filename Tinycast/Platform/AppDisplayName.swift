@@ -20,7 +20,7 @@ enum AppDisplayName {
 extension Bundle {
     /// The channel-aware display name, from the generated Info.plist.
     var appDisplayName: String {
-        infoName("CFBundleDisplayName") ?? infoName("CFBundleName") ?? "Tinycast"
+        infoName("CFBundleDisplayName") ?? infoName("CFBundleName") ?? "Oncast"
     }
 
     /// The name a bundle declares for itself. Not what Finder shows — LaunchServices ignores a

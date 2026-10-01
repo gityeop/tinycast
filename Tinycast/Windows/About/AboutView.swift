@@ -76,7 +76,7 @@ struct AboutView: View {
                 .font(.caption)
             }
 
-            Text("A tiny, native macOS launcher.")
+            Text("A native macOS launcher, based on Tinycast.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -105,15 +105,15 @@ struct AboutView: View {
                             .foregroundStyle(Theme.Colors.brand)
                     )
                 VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
-                    SettingsRowTitle(.aboutLinks, "Support")
+                    SettingsRowTitle(.aboutLinks, "Support Tinycast")
                         .font(.body.weight(.medium))
-                    Text("Free and open source, funded out of pocket.")
+                    Text("Support the original Tinycast developer.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: Theme.Spacing.lg)
-                Button("Support…") { core.supportCoordinator.showSupport() }
+                Button("Support Tinycast…") { core.supportCoordinator.showSupport() }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.Colors.brand)
             }
@@ -144,22 +144,22 @@ private struct AboutLink: Identifiable {
 
     static let all: [AboutLink] = [
         AboutLink(
-            id: "website", glyph: .symbol("globe"), title: "Website",
+            id: "website", glyph: .symbol("globe"), title: "Tinycast Website",
             detail: "tinycast.dev",
             url: URL(string: "https://tinycast.dev/")!),
         AboutLink(
             id: "github", glyph: .brand("BrandGitHub"), title: "GitHub",
-            detail: "github.com/abue-ammar/tinycast",
-            url: URL(string: "https://github.com/abue-ammar/tinycast")!),
+            detail: "github.com/gityeop/tinycast",
+            url: URL(string: "https://github.com/gityeop/tinycast")!),
         AboutLink(
-            id: "discord", glyph: .brand("BrandDiscord"), title: "Discord",
+            id: "discord", glyph: .brand("BrandDiscord"), title: "Tinycast Discord",
             detail: "Join the Tinycast community",
             url: URL(string: "https://discord.gg/v2Eeb4QQy3")!),
         AboutLink(
-            id: "x", glyph: .brand("BrandX"), title: "X", detail: "@abue_ammar",
+            id: "x", glyph: .brand("BrandX"), title: "Tinycast Developer", detail: "@abue_ammar",
             url: URL(string: "https://x.com/abue_ammar")!),
         AboutLink(
-            id: "email", glyph: .symbol("envelope"), title: "Email",
+            id: "email", glyph: .symbol("envelope"), title: "Tinycast Developer Email",
             detail: "iabueammar@gmail.com", url: URL(string: "mailto:iabueammar@gmail.com")!)
     ]
 }

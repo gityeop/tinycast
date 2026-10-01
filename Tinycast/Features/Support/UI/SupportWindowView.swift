@@ -51,9 +51,9 @@ struct SupportWindowView: View {
                 .frame(width: Self.iconSize, height: Self.iconSize)
                 .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
             VStack(spacing: Theme.Spacing.sm) {
-                Text("Support \(Bundle.main.appDisplayName)")
+                Text("Support Tinycast")
                     .font(.title2.weight(.semibold))
-                Text("Built with love.")
+                Text("Support the original developer behind Oncast's foundation.")
                     .font(.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
@@ -65,7 +65,7 @@ struct SupportWindowView: View {
 
     private var action: some View {
         VStack(spacing: Theme.Spacing.lg) {
-            SupportActionButton(title: "Support \(Bundle.main.appDisplayName)", icon: "heart") {
+            SupportActionButton(title: "Support Tinycast", icon: "heart") {
                 support.openCheckout()
             }
             Text("Secure checkout on Polar.")

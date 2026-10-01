@@ -102,7 +102,7 @@ final class CalendarCoordinator {
                 await core.confirm(
                     title: "Enable calendar?",
                     message:
-                        "Tinycast reads \(span.possessivePhrase) events to find join links. "
+                        "Oncast reads \(span.possessivePhrase) events to find join links. "
                         + "Nothing leaves this Mac.",
                     symbol: "calendar", confirmTitle: "Continue", tone: .neutral,
                     confirmRole: .standard)

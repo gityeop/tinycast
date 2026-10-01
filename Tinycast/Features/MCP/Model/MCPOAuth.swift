@@ -21,7 +21,7 @@ enum MCPOAuth {
             case .invalidMetadata: return "The server's OAuth metadata is invalid."
             case .unsupportedPKCE: return "The authorization server must advertise PKCE S256 support."
             case .clientRequired:
-                return "Enter a registered client ID. This server cannot register Tinycast automatically."
+                return "Enter a registered client ID. This server cannot register Oncast automatically."
             case .issuerChanged:
                 return "The authorization server changed. Enter client credentials for the new server."
             case .invalidCallback: return "The sign-in response could not be verified."

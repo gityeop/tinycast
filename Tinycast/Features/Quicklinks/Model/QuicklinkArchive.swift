@@ -22,7 +22,7 @@ enum QuicklinkArchive {
 
         var errorDescription: String? {
             switch self {
-            case .unreadable: return "This file isn't a Tinycast quicklinks export."
+            case .unreadable: return "This file isn't an Oncast quicklinks export."
             case .empty: return "This file contains no quicklinks."
             }
         }

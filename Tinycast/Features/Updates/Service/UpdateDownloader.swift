@@ -21,7 +21,7 @@ enum UpdateDownloader {
             let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
 
             var request = URLRequest(url: release.assetURL)
-            request.setValue("Tinycast", forHTTPHeaderField: "User-Agent")
+            request.setValue("Oncast", forHTTPHeaderField: "User-Agent")
             let task = session.downloadTask(with: request)
             continuation.onTermination = { _ in
                 task.cancel()

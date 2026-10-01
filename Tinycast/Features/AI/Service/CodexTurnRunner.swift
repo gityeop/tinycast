@@ -4,13 +4,13 @@ import Foundation
 @MainActor
 final class CodexTurnRunner {
     private static let safetyInstructions = """
-        You are providing text generation inside Tinycast. Never invoke tools, execute commands, read \
+        You are providing text generation inside Oncast. Never invoke tools, execute commands, read \
         files, inspect the environment, or modify files. Use only the request content supplied by \
-        Tinycast.
+        Oncast.
         """
     /// The same boundary for the one turn shape that is handed tools; everything else stays off.
     private static let toolSafetyInstructions = """
-        You are providing text generation inside Tinycast. The only tools you may use are the MCP \
+        You are providing text generation inside Oncast. The only tools you may use are the MCP \
         tools supplied with this request. Never execute commands, read files, inspect the \
         environment, or modify files.
         """

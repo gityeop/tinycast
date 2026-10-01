@@ -29,7 +29,7 @@ enum MCPTransportError: LocalizedError, Equatable {
         case .launchFailed(let detail): return detail
         case .invalidEndpoint(let detail): return detail
         case .requestFailed(let detail): return detail
-        case .malformedResponse: return "The server sent a response Tinycast could not read."
+        case .malformedResponse: return "The server sent a response Oncast could not read."
         case .timedOut: return "The server did not respond in time."
         }
     }

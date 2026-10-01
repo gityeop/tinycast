@@ -10,7 +10,7 @@ struct CalendarSettingsView: View {
         Form {
             FeatureSwitchSection(
                 anchor: .calendarCalendar,
-                enableTitle: "Join meetings from Tinycast",
+                enableTitle: "Join meetings from Oncast",
                 enableSubtitle:
                     "Reads \(core.calendarCoordinator.span.possessivePhrase) events for join links. "
                     + "Nothing leaves this Mac.",
@@ -96,7 +96,7 @@ struct CalendarSettingsView: View {
                     }
                 } label: {
                     SettingsRowTitle(.calendarMenuBar, "Calendar in Menu Bar")
-                    Text("Separate from the Tinycast icon.")
+                    Text("Separate from the Oncast icon.")
                 }
                 Picker(selection: $settings.menuBarEvents) {
                     ForEach(MenuBarEvents.allCases) { lead in

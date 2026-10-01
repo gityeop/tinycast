@@ -49,8 +49,8 @@ enum CustomQuickActionError: Error, LocalizedError, Equatable {
         switch self {
         case .emptyName: return "Give the action a name."
         case .emptyInstructions: return "Tell the model what the action should do."
-        case .invalidCharacter: return "The name contains a character Tinycast can't store."
-        case .storageUnavailable: return "Tinycast couldn't save to its actions file."
+        case .invalidCharacter: return "The name contains a character Oncast can't store."
+        case .storageUnavailable: return "Oncast couldn't save to its actions file."
         }
     }
 }

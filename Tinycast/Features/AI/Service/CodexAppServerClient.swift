@@ -164,21 +164,21 @@ final class CodexAppServerClient {
                 inherited: inherited)
         else {
             throw ClientError.launchFailed(
-                "Tinycast could not read which MCP servers your Codex configuration runs, so it "
+                "Oncast could not read which MCP servers your Codex configuration runs, so it "
                     + "could not keep them out of the chat. Run \u{201C}codex mcp list\u{201D} "
                     + "in Terminal to see why.")
         }
         try checkNotStopped(since: generation)
         if let name = CodexMCPLaunch.unaddressableName(foreign) {
             throw ClientError.launchFailed(
-                "Your Codex MCP server \u{201C}\(name)\u{201D} cannot be kept out of a Tinycast "
+                "Your Codex MCP server \u{201C}\(name)\u{201D} cannot be kept out of an Oncast "
                     + "chat, because a dot or an equals sign in its name cannot be addressed. "
                     + "Rename it in your Codex configuration.")
         }
         if let taken = CodexMCPLaunch.takenName(servers: toolServers, foreignNames: foreign) {
             throw ClientError.launchFailed(
                 "Your Codex configuration has its own MCP server named \u{201C}\(taken)\u{201D}. "
-                    + "Rename it to use this Tinycast server with Codex.")
+                    + "Rename it to use this Oncast server with Codex.")
         }
         let process = Process()
         let stdin = Pipe()
@@ -234,7 +234,7 @@ final class CodexAppServerClient {
                 params: [
                     "clientInfo": [
                         "name": "tinycast",
-                        "title": "Tinycast",
+                        "title": "Oncast",
                         "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                             ?? "0"
                     ],
@@ -375,7 +375,7 @@ final class CodexAppServerClient {
         default:
             try? send(
                 CodexAppServerProtocol.errorResponse(
-                    id: id, message: "Tinycast does not expose Codex tools."))
+                    id: id, message: "Oncast does not expose Codex tools."))
             return
         }
         try? send(CodexAppServerProtocol.response(id: id, result: result))

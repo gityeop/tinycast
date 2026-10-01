@@ -21,13 +21,13 @@ struct InstalledCLIProvider: AIProvider {
 @MainActor
 private final class InstalledCLITurnRunner {
     private static let safetyInstructions = """
-        You are generating text inside Tinycast. Do not invoke tools, read files, inspect the \
+        You are generating text inside Oncast. Do not invoke tools, read files, inspect the \
         environment, access external resources, or modify anything. Use only the conversation and \
         instructions in this request.
         """
     /// The same boundary, for the one route that is handed tools: everything else stays off.
     private static let toolSafetyInstructions = """
-        You are generating text inside Tinycast. The only tools you may use are the MCP tools \
+        You are generating text inside Oncast. The only tools you may use are the MCP tools \
         supplied with this request. Do not read files, inspect the environment, access external \
         resources, or modify anything else.
         """
@@ -147,7 +147,7 @@ private final class InstalledCLITurnRunner {
         } catch {
             continuation.finish(
                 throwing: AIProviderError.unavailable(
-                    "Tinycast could not prepare its private AI workspace."))
+                    "Oncast could not prepare its private AI workspace."))
             return
         }
 
@@ -164,7 +164,7 @@ private final class InstalledCLITurnRunner {
                 activeServers = []
                 continuation.finish(
                     throwing: AIProviderError.unavailable(
-                        "Tinycast could not write its private MCP configuration."))
+                        "Oncast could not write its private MCP configuration."))
                 return
             }
             configURL = url
@@ -186,7 +186,7 @@ private final class InstalledCLITurnRunner {
                 try? FileManager.default.removeItem(at: url)
                 continuation.finish(
                     throwing: AIProviderError.unavailable(
-                        "Tinycast could not write its private AI prompt."))
+                        "Oncast could not write its private AI prompt."))
                 return
             }
             grokPrompt = url
@@ -251,7 +251,7 @@ private final class InstalledCLITurnRunner {
         // Framed as JSON, so a picture rides beside the text as a content block.
         let images = request.messages.last { $0.role == .user }?.images ?? []
         guard let line = ClaudeControlProtocol.userMessage(prompt, images: images) else {
-            fail("Tinycast could not frame the request for " + kind.title + ".")
+            fail("Oncast could not frame the request for " + kind.title + ".")
             return
         }
         // A tool loop answers on the same pipe, so an armed turn keeps stdin open for it.
@@ -332,7 +332,7 @@ private final class InstalledCLITurnRunner {
         case .openCode:
             var result = [
                 "run", "--pure", "--format", "json", "--model", model,
-                "--dir", workspace.path, "--title", "Tinycast"
+                "--dir", workspace.path, "--title", "Oncast"
             ]
             if let effort { result += ["--variant", effort] }
             return result
@@ -430,7 +430,7 @@ private final class InstalledCLITurnRunner {
             return
         }
         if let id = frame.unsupportedRequestID {
-            let refusal = "Tinycast does not answer this request."
+            let refusal = "Oncast does not answer this request."
             if let line = ClaudeControlProtocol.error(to: id, message: refusal) {
                 write(line, closing: false)
             }

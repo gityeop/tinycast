@@ -14,7 +14,7 @@ struct UpdateInstaller: Sendable {
                 return "Downloading… \(Self.size(received)) of \(Self.size(expected))"
             case .extracting: return "Expanding…"
             case .verifying: return "Verifying…"
-            case .replacing: return "Replacing Tinycast…"
+            case .replacing: return "Replacing Oncast…"
             }
         }
 

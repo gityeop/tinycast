@@ -1,8 +1,10 @@
-# Tinycast
+# Oncast
 
-This personal fork adds native command deeplinks, **⌘K → Copy Deeplink**, and Confetti.
+Oncast is a personal Tinycast fork with a glitch O app icon, native command deeplinks,
+**⌘K → Copy Deeplink**, and Confetti.
 See [the fork setup](FORK.md) and [supported deeplinks](docs/features/deeplinks.md).
-The upstream Tinycast description follows.
+The upstream Tinycast description follows. Its release downloads and support links refer to
+the original Tinycast; build Oncast using [FORK.md](FORK.md).
 
 **A tiny, fully native macOS launcher. One hotkey, everything you reach for all day, under 100 MB of
 RAM.**

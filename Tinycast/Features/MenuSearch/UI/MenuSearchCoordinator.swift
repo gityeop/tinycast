@@ -108,7 +108,7 @@ final class MenuSearchCoordinator {
 
     private func reportPermissionFailure() async {
         let openSettings = await core.reportFailure(
-            title: "Tinycast Needs Accessibility Access",
+            title: "Oncast Needs Accessibility Access",
             message: "Searching menus reads the front app's menu bar.",
             symbol: "menubar.rectangle", recovery: "Open Settings")
         if openSettings { Permissions.openAccessibilitySettings() }

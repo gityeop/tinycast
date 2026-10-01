@@ -1,16 +1,19 @@
 # Release
 
+Oncast's Developer ID build and notarization procedure is in [FORK.md](../FORK.md).
+The local DMG command below packages Oncast; the remaining release channels describe upstream Tinycast.
+
 How a build reaches a user. The local development loop is in [development.md](development.md);
 the signing identity itself is in [signing.md](signing.md).
 
 ## Packaging a DMG locally
 
 ```sh
-./Scripts/build-dmg.sh            # -> build/Tinycast-<version>.dmg (version from project.yml)
-./Scripts/build-dmg.sh 0.5.7      # -> build/Tinycast-0.5.7.dmg
+./Scripts/build-dmg.sh            # -> build/Oncast-<version>.dmg (version from project.yml)
+./Scripts/build-dmg.sh 0.5.7      # -> build/Oncast-0.5.7.dmg
 ```
 
-It builds a Release `Tinycast.app` signed with `Tinycast Self-Signed` and packs it with an
+It builds a Release `Oncast.app` signed with `Tinycast Self-Signed` and packs it with an
 `/Applications` symlink. Official per-channel releases are built by CI, below.
 
 ## Signing & Gatekeeper

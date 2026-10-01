@@ -51,7 +51,7 @@ final class ExtensionCoordinator {
                     title: "Enable extensions?",
                     message:
                         "Extensions are third-party JavaScript, run on this Mac. A running command "
-                        + "holds a JavaScript engine in memory until you leave it — expect Tinycast "
+                        + "holds a JavaScript engine in memory until you leave it — expect Oncast "
                         + "to use noticeably more RAM while one is open.",
                     symbol: "puzzlepiece.extension", confirmTitle: "Enable", tone: .neutral,
                     confirmRole: .standard)

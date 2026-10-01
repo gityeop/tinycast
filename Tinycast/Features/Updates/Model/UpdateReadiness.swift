@@ -27,7 +27,7 @@ enum UpdateReadiness {
             case .uninstalling: return "Waiting for the uninstaller to finish."
             case .recordingHotKey: return "Finish recording the shortcut first."
             case .dialogOpen: return "Close the open dialog first."
-            case .paletteOpen: return "Close Tinycast's window first."
+            case .paletteOpen: return "Close Oncast's window first."
             }
         }
     }

@@ -1,5 +1,8 @@
 # Development
 
+For the Oncast fork's build script, app name and existing settings, use [FORK.md](../FORK.md).
+The development channels below describe upstream Tinycast.
+
 The local loop: set up, build, run, regenerate. Shipping a build is [release.md](release.md);
 verifying a change is [testing.md](testing.md).
 

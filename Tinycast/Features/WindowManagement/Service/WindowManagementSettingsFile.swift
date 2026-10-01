@@ -178,7 +178,7 @@ struct WindowManagementSettingsFile {
             }
             guard let binding = spelling.binding(from: text) else {
                 issues.append(
-                    .invalidEntry(key, "\(item.label): “\(text)” isn't a shortcut Tinycast can bind"))
+                    .invalidEntry(key, "\(item.label): “\(text)” isn't a shortcut Oncast can bind"))
                 continue
             }
             guard binding != current else { continue }

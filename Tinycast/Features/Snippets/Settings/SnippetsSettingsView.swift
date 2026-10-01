@@ -304,7 +304,7 @@ private struct SnippetEditorPanel: View {
                 .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
                 .focused($isTemplateFocused)
                 .accessibilityLabel("Snippet template")
-                .accessibilityHint("Enter the text Tinycast expands.")
+                .accessibilityHint("Enter the text Oncast expands.")
         }
     }
 

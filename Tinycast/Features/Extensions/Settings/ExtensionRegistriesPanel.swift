@@ -15,7 +15,7 @@ struct ExtensionRegistriesPanel: View {
         VStack(alignment: .leading, spacing: 0) {
             ExtensionSettingsEditorHeader(
                 title: "Registries",
-                subtitle: "Where Tinycast looks when you search for an extension to install."
+                subtitle: "Where Oncast looks when you search for an extension to install."
             )
             .padding(.horizontal, Theme.Spacing.dialogInset)
             .padding(.top, Theme.Spacing.dialogInset)

@@ -93,7 +93,7 @@ struct SnippetRepository: Sendable {
             case .fileNotFound(let fileURL):
                 return "The snippet file no longer exists. (\(fileURL.lastPathComponent))"
             case .invalidFileLocation(let fileURL):
-                return "The snippet file is outside this Tinycast channel. (\(fileURL.path))"
+                return "The snippet file is outside this Oncast channel. (\(fileURL.path))"
             case .io(let fileURL, let message):
                 return "Could not access \(fileURL.path): \(message)"
             }

@@ -109,7 +109,7 @@ final class WindowSwitchCoordinator {
 
     private func reportPermissionFailure() async {
         let openSettings = await core.reportFailure(
-            title: "Tinycast Needs Accessibility Access",
+            title: "Oncast Needs Accessibility Access",
             message: "Switching windows reads and raises other apps' windows.",
             symbol: "macwindow.on.rectangle", recovery: "Open Settings")
         if openSettings { Permissions.openAccessibilitySettings() }

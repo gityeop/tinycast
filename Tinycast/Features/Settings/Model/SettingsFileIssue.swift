@@ -19,7 +19,7 @@ enum SettingsFileIssue: Error, Equatable, Sendable {
         case .notAnObject(nil): "the file must hold one JSON object"
         case .notAnObject(let path?): "“\(path)” must be an object"
         case .unknownSetting(let path): "unknown setting “\(path)”"
-        case .invalidValue(let key): "“\(key.rawValue)” has a value Tinycast can't use"
+        case .invalidValue(let key): "“\(key.rawValue)” has a value Oncast can't use"
         case .invalidEntry(let key, let detail): "“\(key.rawValue)”: \(detail)"
         case .unreadable: "couldn't be read"
         case .unwritable: "couldn't be saved"

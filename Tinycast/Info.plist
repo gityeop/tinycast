@@ -24,7 +24,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>Raycast and Tinycast URL Scheme</string>
+			<string>Raycast and Oncast URL Scheme</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>raycast</string>
@@ -43,7 +43,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>com.tinycast.backup</string>
 			<key>UTTypeDescription</key>
-			<string>Tinycast Backup</string>
+			<string>Oncast Backup</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
@@ -65,16 +65,16 @@
 	<key>NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Tinycast uses automation to perform system actions you explicitly run.</string>
+	<string>Oncast uses automation to perform system actions you explicitly run.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Tinycast shows a camera preview so you can check yourself, and take a photo to the clipboard.</string>
+	<string>Oncast shows a camera preview so you can check yourself, and take a photo to the clipboard.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Tinycast reads today's and tomorrow's events so you can join a meeting from the palette.</string>
+	<string>Oncast reads today's and tomorrow's events so you can join a meeting from the palette.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Tinycast lets extensions you run read and edit your reminders.</string>
+	<string>Oncast lets extensions you run read and edit your reminders.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Tinycast uses Bluetooth access only when you run the Toggle Bluetooth action.</string>
+	<string>Oncast uses Bluetooth access only when you run the Toggle Bluetooth action.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Tinycast</string>
+	<string>Oncast, based on Tinycast © 2026 Abue Ammar</string>
 </dict>
 </plist>
