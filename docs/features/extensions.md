@@ -200,7 +200,8 @@ settled content while loading. Button changes wait until the menu closes so its 
 under the pointer.
 The session stays alive while the menu is open. After a settled render or menu
 closure, a 100 ms coalescing delay lets React commit effects and host calls drain before releasing the
-context. The runtime queue drains temporary Objective-C objects after each work item, including
+context; a further 50 ms after the drain lets their results render. The runtime queue drains
+temporary Objective-C objects after each work item, including
 context teardown. Loading and closed-menu actions have a 60-second deadline; an open, settled menu is exempt.
 This bounds asynchronous work, but cannot interrupt an extension stuck in synchronous JavaScript or a
 blocking Node shim on the runtime queue.

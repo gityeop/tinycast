@@ -106,7 +106,7 @@ final class ExtensionMenuBarManager: ExtensionRuntimeDelegate {
     ) throws {
         try validateLaunch(owner, command: command, type: type)
         let reference = ExtensionCommandRef(extensionName: owner.manifest.name, commandName: command.name)
-        if command.mode == .menuBar, !metadata(reference).menuBarEnabled {
+        if command.mode == .menuBar, type == .userInitiated, !metadata(reference).menuBarEnabled {
             commandMetadata.setMenuBarEnabled(
                 true, extension: reference.extensionName,
                 command: reference.commandName)
@@ -305,6 +305,8 @@ final class ExtensionMenuBarManager: ExtensionRuntimeDelegate {
         idleTask = Task { [weak self] in
             do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
             await active.runtime.drainHostCalls()
+            // Settled host calls commit their render on a later React tick.
+            do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
             guard !Task.isCancelled, let self, self.active?.id == active.id,
                 !active.isLoading, active.pendingActions == 0,
                 self.controllers[active.request.reference.entryID]?.isOpen != true
