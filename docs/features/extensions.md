@@ -212,7 +212,10 @@ settings backups. The command's **Show in menu bar** toggle, uninstall, and disa
 all tear down the corresponding native items and work. Removing a menu item leaves the extension's
 other commands installed. Only explicitly activated commands have saved records.
 
-`launchCommand` preserves `type`, arguments and JSON context. Background menu refreshes and explicit
+`launchCommand` preserves `type`, arguments and JSON context. A background launch of a disabled
+menu-bar command rejects with `must be activated` before enqueueing work or changing its saved record.
+Background refreshes never activate a menu-bar command; a user-initiated launch or its settings toggle
+must enable it first. Background menu refreshes and explicit
 background `no-view` launches use the transient lane at utility priority and leave the palette alone;
 a user-initiated view launch from a menu opens the palette. Menu toasts are suppressed; errors appear
 in the menu and user-initiated failures also use the HUD. `updateCommandMetadata` publishes subtitles

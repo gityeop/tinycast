@@ -33,7 +33,12 @@ extension ExtensionTests {
         let reference = ExtensionCommandRef(extensionName: owner.manifest.name, commandName: command.name)
         print("▶ Native menu lifecycle: \(owner.title) — \(command.title)")
         manager.synchronize([owner])
-        manager.run(owner, command: command)
+        do {
+            try manager.run(owner, command: command)
+        } catch {
+            check("installed menu command launches", false, error.localizedDescription)
+            return
+        }
         for _ in 0..<200 where manager.isRunning { await settle(50) }
         check("real command settles and unloads", !manager.isRunning && lastRuntime == nil)
         check(
@@ -573,6 +578,46 @@ extension ExtensionTests {
             }, onError: { message, _, _ in failures.append(message) })
         defer { manager.stop() }
         manager.synchronize(installed)
+        func run(
+            _ owner: InstalledExtension, arguments: [String: String] = [:],
+            type: ExtensionLaunchType = .userInitiated, context: [String: RenderValue] = [:]
+        ) {
+            do {
+                try manager.run(
+                    owner, command: owner.manifest.commands[0], arguments: arguments,
+                    type: type, context: context)
+            } catch {
+                check("menu command launches", false, error.localizedDescription)
+            }
+        }
+        func rejectDisabledBackground(_ owner: InstalledExtension, label: String) async {
+            let before = metadata.metadata(extension: owner.manifest.name, command: "bar")
+            let executions = boots.count
+            do {
+                try manager.run(
+                    owner, command: owner.manifest.commands[0], type: .background,
+                    context: ["origin": .string("color-picker-refresh")])
+                check("\(label) background launch is rejected", false)
+            } catch {
+                check(
+                    "\(label) background launch reports activation requirement",
+                    error.localizedDescription
+                        == "The menu bar command must be activated before it can run in the background.")
+            }
+            await settle(150)
+            check(
+                "\(label) background launch starts no execution",
+                boots.count == executions && !manager.isRunning && lastRuntime == nil)
+            let after = metadata.metadata(extension: owner.manifest.name, command: "bar")
+            check(
+                "\(label) background launch keeps activation and snapshot off",
+                after == before && !after.menuBarEnabled && after.menuBarSnapshot == nil)
+            metadata.flush()
+            let restored = ExtensionCommandMetadataStore(fileURL: metadataFile)
+            check(
+                "\(label) stays disabled after metadata reload",
+                restored.metadata(extension: owner.manifest.name, command: "bar") == before)
+        }
         func snapshot(_ reference: ExtensionCommandRef) -> ExtensionMenuBarSnapshot? {
             metadata.metadata(extension: reference.extensionName, command: reference.commandName)
                 .menuBarSnapshot
@@ -583,10 +628,14 @@ extension ExtensionTests {
                 extension: reference.extensionName, command: reference.commandName, now: .distantPast)
         }
         check("install does not run a menu command", boots.isEmpty && metadata.menuBarCommands().isEmpty)
-        manager.run(first, command: first.manifest.commands[0])
+        await rejectDisabledBackground(first, label: "never activated menu")
+        run(first)
         await settle(400)
         check("settled menu keeps only a snapshot", !manager.isRunning && lastRuntime == nil)
-        check("manual launch snapshots title", snapshot(firstRef)?.title == "userInitiated")
+        check(
+            "manual launch activates and snapshots title",
+            metadata.metadata(extension: "first", command: "bar").menuBarEnabled
+                && snapshot(firstRef)?.title == "userInitiated")
         check(
             "manifest interval schedules next refresh",
             metadata.metadata(extension: "first", command: "bar").lastRun != nil)
@@ -669,8 +718,8 @@ extension ExtensionTests {
 
         controller.menuWillOpen(controller.menu)
         await settle(200)
-        manager.run(
-            second, command: second.manifest.commands[0], arguments: ["value": "kept"],
+        run(
+            second, arguments: ["value": "kept"],
             type: .background, context: ["origin": .string("payload")])
         makeOverdue(secondRef)
         manager.synchronize(installed)
@@ -683,7 +732,7 @@ extension ExtensionTests {
                 == .string("background:kept:payload")
                 && !manager.isRunning)
 
-        manager.run(first, command: first.manifest.commands[0], type: .background)
+        run(first, type: .background)
         let backgroundBoots = boots.count
         check("background hosts begin without interactive prompts", hosts.last?.isInteractive == false)
         controller.menuWillOpen(controller.menu)
@@ -727,7 +776,11 @@ extension ExtensionTests {
         manager.synchronize(installed)
         await settle(450)
         check("overdue refresh runs with background launch type", boots.last?.1 == .background)
-        check("background refresh unloads", !manager.isRunning && lastRuntime == nil)
+        check(
+            "enabled background refresh updates its snapshot and unloads",
+            metadata.metadata(extension: "first", command: "bar").menuBarEnabled
+                && snapshot(firstRef)?.title == "background"
+                && !manager.isRunning && lastRuntime == nil)
         metadata.flush()
         let restored = ExtensionCommandMetadataStore(fileURL: metadataFile)
         check(
@@ -740,13 +793,19 @@ extension ExtensionTests {
         await settle(150)
         check("restoring a saved item executes no JavaScript", boots.count == bootCount)
 
-        manager.run(first, command: first.manifest.commands[0])
-        manager.run(second, command: second.manifest.commands[0])
+        manager.disable(firstRef.entryID)
+        await rejectDisabledBackground(first, label: "manually disabled menu")
+        manager.synchronize(installed)
+        await settle(150)
+        check("relaunch does not restore the disabled menu", boots.count == bootCount)
+
+        run(first)
+        run(second)
         await settle(750)
         check(
             "queued refreshes finish serially",
             boots.suffix(2).map(\.0) == ["first", "second"] && !manager.isRunning)
-        manager.run(empty, command: empty.manifest.commands[0])
+        run(empty)
         await settle(300)
         check(
             "null removes item without forgetting activation",
@@ -770,8 +829,7 @@ extension ExtensionTests {
             context: launchContext())
         await settle(100)
         let foregroundRenders = recorder.trees.count
-        manager.run(
-            job, command: job.manifest.commands[0], type: .background, context: ["origin": .string("menu")])
+        run(job, type: .background, context: ["origin": .string("menu")])
         await settle(300)
         check(
             "background no-view receives scoped context",
@@ -780,7 +838,7 @@ extension ExtensionTests {
         check(
             "no-view launch creates no menu snapshot",
             !metadata.metadata(extension: "job", command: "bar").menuBarEnabled)
-        manager.run(first, command: first.manifest.commands[0], type: .background)
+        run(first, type: .background)
         await settle(300)
         check(
             "foreground keeps rendering during background commands",
@@ -788,7 +846,7 @@ extension ExtensionTests {
                 && recorder.failures.isEmpty && !manager.isRunning)
         foreground.shutdown()
 
-        manager.run(hanging, command: hanging.manifest.commands[0])
+        run(hanging)
         await settle(150)
         manager.disable("extension:hanging/bar")
         await settle(150)
@@ -796,7 +854,7 @@ extension ExtensionTests {
         check(
             "disable removes snapshot and schedule",
             !metadata.metadata(extension: "hanging", command: "bar").menuBarEnabled)
-        manager.run(hanging, command: hanging.manifest.commands[0])
+        run(hanging)
         await settle(1250)
         check(
             "loading timeout releases runtime",

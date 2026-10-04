@@ -90,10 +90,21 @@ final class ExtensionMenuBarManager: ExtensionRuntimeDelegate {
         scheduleRefresh()
     }
 
+    func validateLaunch(
+        _ owner: InstalledExtension, command: ExtensionCommand, type: ExtensionLaunchType
+    ) throws {
+        let reference = ExtensionCommandRef(extensionName: owner.manifest.name, commandName: command.name)
+        if command.mode == .menuBar, type == .background, !metadata(reference).menuBarEnabled {
+            throw ExtensionLaunchError.unsupported(
+                "The menu bar command must be activated before it can run in the background.")
+        }
+    }
+
     func run(
         _ owner: InstalledExtension, command: ExtensionCommand, arguments: [String: String] = [:],
         type: ExtensionLaunchType = .userInitiated, context: [String: RenderValue] = [:]
-    ) {
+    ) throws {
+        try validateLaunch(owner, command: command, type: type)
         let reference = ExtensionCommandRef(extensionName: owner.manifest.name, commandName: command.name)
         if command.mode == .menuBar, !metadata(reference).menuBarEnabled {
             commandMetadata.setMenuBarEnabled(

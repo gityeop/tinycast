@@ -325,8 +325,12 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     ) async {
         guard isEnabled else { return }
         if command.mode == .menuBar || (command.mode == .noView && launchType == .background) {
-            menuBars?.run(
-                owner, command: command, arguments: arguments, type: launchType, context: launchContext)
+            do {
+                try menuBars?.run(
+                    owner, command: command, arguments: arguments, type: launchType, context: launchContext)
+            } catch {
+                state = .failed(error.localizedDescription)
+            }
             return
         }
         await stop()
@@ -466,7 +470,11 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         guard let owner = extensionNamed(reference.extensionName),
             let command = owner.command(named: reference.commandName)
         else { return }
-        menuBars?.run(owner, command: command)
+        do {
+            try menuBars?.run(owner, command: command)
+        } catch {
+            state = .failed(error.localizedDescription)
+        }
     }
 
     /// Whether the Actions menu can offer refresh controls for this row.
@@ -907,6 +915,7 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         guard launchType != .background || command.mode != .view else {
             throw ExtensionLaunchError.unsupported("A view command cannot run in the background.")
         }
+        try menuBars?.validateLaunch(owner, command: command, type: launchType)
         coordinator?.runExtensionCommand(
             entry(for: command, in: owner), arguments: arguments, fallbackText: fallbackText,
             launchType: launchType, launchContext: launchContext)
@@ -916,6 +925,7 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
         guard let (owner, command) = resolve(link) else {
             throw ExtensionLaunchError.unknownCommand(link.commandName)
         }
+        try menuBars?.validateLaunch(owner, command: command, type: link.launchType)
         coordinator?.runExtensionCommand(
             entry(for: command, in: owner), arguments: link.arguments,
             fallbackText: link.fallbackText, launchType: link.launchType)
