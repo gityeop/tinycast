@@ -13,7 +13,11 @@ The production artwork is [Oncast.png](../Tinycast/oncast.icon/Assets/Oncast.png
 Icon Composer compiles [oncast.icon](../Tinycast/oncast.icon) with glass and translucency disabled
 to keep the white O and cyan/magenta glitch edges crisp. macOS supplies the rounded mask.
 
-The artwork was generated and normalized with the built-in `imagegen` tool.
+The menu bar uses [a vector template](../Tinycast/Assets.xcassets/OncastMenuBar.imageset/oncast-menu-bar.svg)
+of the O with two displaced horizontal slices. It is drawn at 18 pt without the app icon's background
+or color fringes, so macOS can adapt its ink to the menu bar's appearance.
+
+The app icon artwork was generated and normalized with the built-in `imagegen` tool.
 The selected concept is a white geometric O with two horizontal glitch cuts on dark graphite,
 with no lightning or wordmark. The final image-edit prompt was:
 

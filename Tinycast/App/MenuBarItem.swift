@@ -5,7 +5,11 @@ struct MenuBarLabel: View {
     let appName: String
 
     var body: some View {
-        Image(systemName: "macwindow.on.rectangle")
+        Image("OncastMenuBar")
+            .resizable()
+            .renderingMode(.template)
+            .scaledToFit()
+            .frame(width: 18, height: 18)
             .accessibilityLabel(appName)
     }
 }
