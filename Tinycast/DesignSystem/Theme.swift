@@ -126,16 +126,7 @@ enum Theme {
         static let shortcutRecorder: CGFloat = 120
         /// One text line in the recorder callout.
         static let shortcutPopoverLine: CGFloat = 14
-        /// Summed from the laid-out bands; the width is pinned by `callout-test`.
-        static let shortcutPopover = CGSize(
-            width: 132,
-            height: Spacing.sm * 2 + heroKeyCap + Spacing.sm + shortcutPopoverLine + Spacing.sm
-                + compactKeyCap + calloutCaretHeight)
-        static let shortcutEditor = CGSize(width: 300, height: 112)
-        static let shortcutEditorOption: CGFloat = 28
-        static let shortcutModifierDetails: CGFloat = 118
-        static let shortcutCharacterDetails: CGFloat = 126
-        static let shortcutInformationDetails: CGFloat = 96
+        static let shortcutPopover = CGSize(width: 300, height: 112)
         /// The callout's pointer: a triangle with a rounded tip.
         static let calloutCaretWidth: CGFloat = 15
         static let calloutCaretHeight: CGFloat = 7

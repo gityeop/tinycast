@@ -80,11 +80,13 @@ export → import within one build is guaranteed to round-trip.
 
 ### Per-key details
 
-Click a recorded combo's keys in the recorder callout to edit them. Control, Option, Shift and Command
-each offer **Any Side**, **Left** or **Right**. Character keys offer **Physical Key** (the recorded
-keyboard position) or **Key Equivalent** (the saved character in the active ASCII-capable layout,
-including its Command table). Non-character keys keep their physical identity. Modifier-only taps
-keep the existing recorder behavior.
+Click a recorded combo's keys in the fixed-size recorder callout to cycle their settings. Control,
+Option, Shift and Command cycle **Any Side → Left → Right → Any Side**, displaying no prefix, `L` or
+`R` before the modifier glyph. Character keys toggle **Physical Key** (`위치`, the recorded keyboard
+position) and **Key Equivalent** (`문자`, the saved character in the active ASCII-capable layout,
+including its Command table). The character cap displays the key and its mode, such as `G · 위치` or
+`G · 문자`. Hover the information glyph for an explanation. Non-character keys keep their physical
+identity. Modifier-only taps keep the existing recorder behavior.
 
 `KeyShortcut` stores these choices as optional `modifierSides` and `keyEquivalent` fields. Existing
 saved chords omit both and retain any-side, physical behavior. The same values travel in settings

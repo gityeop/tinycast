@@ -23,24 +23,8 @@ struct ShortcutRecorderPopover: View {
         var tint: Color?
     }
 
-    static func size(for hotKeys: HotKeyManager) -> CGSize {
-        guard let action = hotKeys.recordingAction, hotKeys.binding(for: action)?.shortcut != nil,
-            !hotKeys.capture.heldGlobe, !hotKeys.capture.awaitingSecondGlobe
-        else { return Theme.Size.shortcutPopover }
-        let details: CGFloat =
-            switch hotKeys.capture.detail {
-            case .modifier: Theme.Size.shortcutModifierDetails
-            case .character: Theme.Size.shortcutCharacterDetails
-            case .information: Theme.Size.shortcutInformationDetails
-            case nil: 0
-            }
-        return CGSize(
-            width: Theme.Size.shortcutEditor.width,
-            height: Theme.Size.shortcutEditor.height + details)
-    }
-
     var body: some View {
-        let size = Self.size(for: hotKeys)
+        let size = Theme.Size.shortcutPopover
         content
             .padding(.horizontal, Theme.Spacing.md)
             .padding(.vertical, Theme.Spacing.sm)
@@ -150,7 +134,7 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
 
     private func placement(field: CGRect, in size: CGSize) -> CalloutPlacement {
         CalloutPlacement.resolve(
-            field: field, container: size, size: ShortcutRecorderPopover.size(for: hotKeys),
+            field: field, container: size, size: Theme.Size.shortcutPopover,
             gap: Theme.Spacing.sm, inset: Theme.Spacing.xs,
             cornerRadius: Theme.Radius.menuPanel, caretWidth: Theme.Size.calloutCaretWidth)
     }

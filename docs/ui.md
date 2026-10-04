@@ -820,23 +820,24 @@ See [features/window-layouts.md](features/window-layouts.md#the-editor).
 ### The shortcut recorder callout
 
 `ShortcutRecorder` is a **120pt** field showing the binding. Recording is narrated by
-`ShortcutRecorderPopover`, a small **132 × 82** callout above it: caps, one label line, an `esc` cap in
+`ShortcutRecorderPopover`, a fixed **300 × 112** callout above it: caps, one label line, an `esc` cap in
 the top-left corner. Its frame shows the prompt (`⌥ A` at half opacity, "Type a
 shortcut"), live held keys, a pending second Globe tap, or a conflict (rejected caps + owner, orange).
 
-A recorded combo opens a **300 × 112** editor with individually clickable modifier and character
-caps. Selecting a cap expands the same callout to show the side or character-mode options; selecting
-the info button shows their explanation. Side-constrained caps carry an `L` or `R`, and the editor
-never collapses them into Hyper. Combo recording leaves this editor open until Escape, a click outside
-or window deactivation. Modifier-only recording keeps its existing completion behavior.
+A recorded combo shows individually clickable modifier and character caps in the same frame.
+Modifier clicks cycle Any Side, Left and Right, displaying no prefix, `L` or `R`. Character clicks
+toggle Physical Key and Key Equivalent, displaying `G · 위치` or `G · 문자`. The information glyph
+explains the modes on hover. No key click opens options or changes the callout's size. The editor never
+collapses modifiers into Hyper. Combo recording leaves it open until Escape, a click outside or window
+deactivation. Modifier-only recording keeps its existing completion behavior.
 
 - **An ancestor draws it.** The open recorder publishes its bounds via `ShortcutRecorderAnchorKey`;
   `.shortcutRecorderPopoverHost()` sits on `SettingsDetailView` — one host above every pane's
   `Form`, and on `OnboardingView`. An overlay on the row would be clipped by the scroll view. A
   recorder in a `LauncherItemsTable` cell sits in its own hosting view, where the preference stops,
   so the cell reports the recorder's frame and `LauncherItemsSection` republishes it as the anchor.
-- **`shortcutPopover.width` is load-bearing.** The callout centres on the recorder only while it
-  fits either side of it; wider than that and the clamp kicks in and skews the caret.
+- **`shortcutPopover.width` is load-bearing.** The fixed-width callout clamps inside the pane when a
+  trailing-edge recorder leaves insufficient room, and its caret follows the recorder's centre.
   `Tests/callout-test.swift` pins this.
 - **One glass shape.** `CalloutShape` (`HotKeys/UI/`) draws body and caret as a single path so `glassEffect`
   lenses them together. The caret is two straight edges meeting at an arc — a rounded-tip triangle,
@@ -845,7 +846,7 @@ or window deactivation. Modifier-only recording keeps its existing completion be
   the harness compiles it against the real `Theme` so a retuned token can't outdate the assertions.
 - **`KeyCapChip.Scale`** is `compact` / `standard` / `hero` — three tokenised sizes, no stray frames.
 - **Only the callout receives clicks.** Passive native hit regions identify the field and callout to
-  the shared capture session. Its mouse monitor permits option clicks, closes on an outside click and
+  the shared capture session. Its mouse monitor permits key clicks, closes on an outside click and
   lets that click continue to the other control. The surrounding overlay stays click-through.
 
 The calculator's inline `CalculatorCard` reuses this card language (`cardFill` + `cardStroke`) rather than the row language, since it's a highlighted answer, not a list item. A value answer is a **two-column** layout: a source column (input echo) and a target column (result), separated by a centered `arrow.right` glyph (no divider line). `LeadCardColumn` is that column, pill included, so the colour card is built from the same part rather than a copy of it. Each column optionally carries a word-name **badge pill** beneath its value (`keyCap` font, `controlSurface` fill, `keyCap` radius) — `Expression`→`Result` for scalar arithmetic, unit or currency names for typed results (`Expression`→`Kilograms`), and moment labels for a date/time calc (`12:18 AM`→`9:00 AM`, `Friday, 24 July`→`Friday, 9 April, 2027`). A trailing operator keeps the last complete result and its badge visible while the next operand is being typed.

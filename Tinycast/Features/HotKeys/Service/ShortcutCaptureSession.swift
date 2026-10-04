@@ -11,17 +11,10 @@ final class ShortcutCaptureSession {
         let owner: String
     }
 
-    enum Detail: Equatable {
-        case modifier(KeyShortcut.Modifier)
-        case character
-        case information
-    }
-
     private(set) var heldModifiers: NSEvent.ModifierFlags = []
     private(set) var heldGlobe = false
     private(set) var awaitingSecondGlobe = false
     private(set) var conflict: Conflict?
-    var detail: Detail?
 
     private static let conflictDwell: Duration = .seconds(1.5)
 
@@ -120,7 +113,6 @@ final class ShortcutCaptureSession {
         conflictReset = nil
         cancelGlobeCommit()
         conflict = nil
-        detail = nil
         heldModifiers = []
         heldGlobe = false
         detector.reset()
@@ -184,7 +176,6 @@ final class ShortcutCaptureSession {
         }
         // Not a bindable combo (e.g. a bare letter): swallow it and keep recording.
         guard let shortcut = KeyShortcut(keyCode: keyCode, modifierFlags: flags) else { return }
-        detail = nil
         commit(.combo(shortcut), action: action, hotKeys: hotKeys, keepRecording: true)
     }
 
