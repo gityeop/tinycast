@@ -43,6 +43,10 @@ final class HotKeyManager {
     let capture = ShortcutCaptureSession()
 
     private let center = HotKeyCenter()
+    var needsAccessibility: Bool { center.needsAccessibility || modifierTapMonitor.needsAccessibility }
+    weak var healthTicker: HealthTicker? {
+        didSet { center.healthTicker = healthTicker }
+    }
     private var modifierTaps: [HotKeyBinding: HotKeyAction] = [:]
     /// Every binding, loaded once in `start()` and written through on change.
     private var bindings: [HotKeyAction: HotKeyBinding] = [:]
@@ -222,10 +226,19 @@ final class HotKeyManager {
         }
     }
 
-    /// What else holds `binding`, or nil. Whole-binding comparison covers every kind alike.
+    /// What else overlaps `binding`, or nil.
     func conflictOwner(of binding: HotKeyBinding, excluding action: HotKeyAction) -> String? {
-        for candidate in candidateActions
-        where candidate != action && self.binding(for: candidate) == binding {
+        for candidate in candidateActions where candidate != action {
+            guard let existing = self.binding(for: candidate) else { continue }
+            let conflicts: Bool
+            if let shortcut = binding.shortcut, let other = existing.shortcut {
+                conflicts = shortcut.overlaps(with: other) { keyCode, modifiers in
+                    KeyShortcut.character(for: keyCode, carbonModifiers: modifiers)
+                }
+            } else {
+                conflicts = existing == binding
+            }
+            guard conflicts else { continue }
             return displayName(of: candidate)
         }
         return nil

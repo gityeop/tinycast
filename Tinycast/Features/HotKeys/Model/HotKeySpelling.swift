@@ -51,14 +51,19 @@ struct HotKeySpelling: Sendable {
     private func text(for shortcut: KeyShortcut) -> String {
         var modifiers = shortcut.carbonModifiers
         var parts: [String] = []
-        if let hyperModifiers, modifiers & hyperModifiers == hyperModifiers {
+        if let hyperModifiers, shortcut.modifierSides.isEmpty,
+            modifiers & hyperModifiers == hyperModifiers
+        {
             parts.append(Self.hyperName)
             modifiers &= ~hyperModifiers
         }
         for (mask, name) in Self.writtenModifiers where modifiers & mask != 0 {
-            parts.append(name)
+            let modifier = KeyShortcut.Modifier.allCases.first { $0.carbonMask == mask }
+            let side = modifier.map { shortcut.modifierSide(for: $0) } ?? .any
+            parts.append(side == .any ? name : side.rawValue + "-" + name)
         }
-        parts.append(keyName(for: shortcut.carbonKeyCode))
+        parts.append(shortcut.keyEquivalent.map { Self.characterPrefix + $0 }
+            ?? keyName(for: shortcut.carbonKeyCode))
         return parts.joined(separator: "+")
     }
 
@@ -70,22 +75,52 @@ struct HotKeySpelling: Sendable {
             tokens.removeLast(2)
             tokens.append("+")
         }
-        guard let keyToken = tokens.popLast(), let keyCode = keyCode(named: keyToken) else {
-            return nil
+        if tokens.count > 2, tokens.last == "", tokens[tokens.count - 2] == Self.characterPrefix {
+            tokens.removeLast(2)
+            tokens.append(Self.characterPrefix + "+")
         }
+        guard let keyToken = tokens.popLast() else { return nil }
+        let character = keyToken.hasPrefix(Self.characterPrefix)
+            ? String(keyToken.dropFirst(Self.characterPrefix.count)) : nil
+        let code: Int?
+        if let character {
+            code = codeByCharacter[character]
+        } else {
+            code = keyCode(named: keyToken)
+        }
+        guard let keyCode = code else { return nil }
         var modifiers = 0
+        var sides: [KeyShortcut.Modifier: KeyShortcut.ModifierSide] = [:]
         for token in tokens {
             if token == Self.hyperName, let hyperModifiers {
                 modifiers |= hyperModifiers
-            } else if let mask = Self.modifierMasks[token] {
-                modifiers |= mask
             } else {
-                return nil
+                let side: KeyShortcut.ModifierSide
+                let name: String
+                if token.hasPrefix("left-") {
+                    side = .left
+                    name = String(token.dropFirst(5))
+                } else if token.hasPrefix("right-") {
+                    side = .right
+                    name = String(token.dropFirst(6))
+                } else {
+                    side = .any
+                    name = token
+                }
+                guard let mask = Self.modifierMasks[name] else { return nil }
+                if side != .any {
+                    guard let modifier = KeyShortcut.Modifier.allCases.first(where: { $0.carbonMask == mask })
+                    else { return nil }
+                    sides[modifier] = side
+                }
+                modifiers |= mask
             }
         }
         let commanding = modifiers & (cmdKey | optionKey | controlKey | kEventKeyModifierFnMask)
         guard commanding != 0 || KeyShortcut.isFunctionKey(keyCode) else { return nil }
-        return KeyShortcut(carbonKeyCode: keyCode, carbonModifiers: modifiers)
+        return KeyShortcut(
+            carbonKeyCode: keyCode, carbonModifiers: modifiers, modifierSides: sides,
+            keyEquivalent: character)
     }
 
     private func keyName(for keyCode: Int) -> String {
@@ -105,6 +140,7 @@ struct HotKeySpelling: Sendable {
     private static let hyperName = "hyper"
     private static let doubleTapPrefix = "double-tap "
     private static let rawKeyPrefix = "key-"
+    private static let characterPrefix = "character:"
     private static let keyCodes = 0..<128
 
     /// The app's 🌐⌃⌥⇧⌘ order, so a spelled chord reads like its keycaps.

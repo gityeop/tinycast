@@ -5,7 +5,7 @@
 - `KeyShortcut` — Sendable model, Carbon keycode + modifiers, layout-aware glyphs via `UCKeyTranslate`.
 - `HotKeyBinding` — what an action is bound to: `.combo(KeyShortcut)`,
   `.doubleTap(DoubleTapModifier)`, `.globe`, or `.doubleGlobe`.
-- `HotKeyCenter` — the Carbon `RegisterEventHotKey` layer, pausable.
+- `HotKeyCenter` — Carbon registrations and the opt-in detailed shortcut event tap, pausable.
 - `DoubleTapModifier` / `DoubleTapDetector` — the double-tap recognizer.
 - `GlobeTapDetector` / `ModifierTapMonitor` — Globe recognition and the shared modifier-only tap.
 
@@ -25,8 +25,8 @@ the keycap rendering — only the _engine_ differs.
 - **A command that opens a palette mode toggles it.** Every one of them enters through
   `PaletteCoordinator.togglePalette(mode:)`, so a second press closes what the first opened. From a
   launcher row the palette is in `.launcher`, so the row always re-points instead.
-- **`HotKeyBinding` is the one thing an action is bound to, with four cases and two engines.** A
-  `.combo` is a Carbon registration; `.doubleTap`, `.globe` and `.doubleGlobe` are recognized by
+- **`HotKeyBinding` is the one thing an action is bound to.** An ordinary `.combo` is a Carbon
+  registration; a combo with per-key details uses the event tap. `.doubleTap`, `.globe` and `.doubleGlobe` are recognized by
   `ModifierTapMonitor`, because Carbon cannot see a lone modifier at all. Its `Codable` is the
   synthesised one.
 - `KeyShortcut`'s hand-written `init(from:)` is a correctness seam, not a format one: it routes every
@@ -77,6 +77,26 @@ travels in a backup, where an imported snippet lands at a new path
 but the guarantee that every decode runs through the initializer that masks device modifier bits off.
 `SettingsBackup.HotkeyBackup` stores the same values, so the backup file carries this shape too; only
 export → import within one build is guaranteed to round-trip.
+
+### Per-key details
+
+Click a recorded combo's keys in the recorder callout to edit them. Control, Option, Shift and Command
+each offer **Any Side**, **Left** or **Right**. Character keys offer **Physical Key** (the recorded
+keyboard position) or **Key Equivalent** (the saved character in the active ASCII-capable layout,
+including its Command table). Non-character keys keep their physical identity. Modifier-only taps
+keep the existing recorder behavior.
+
+`KeyShortcut` stores these choices as optional `modifierSides` and `keyEquivalent` fields. Existing
+saved chords omit both and retain any-side, physical behavior. The same values travel in settings
+backups. Window-management chord strings use `left-` / `right-` modifier prefixes and `character:`
+for a key equivalent, so a settings-file round-trip preserves the details.
+
+Detailed combos need Accessibility access because Carbon cannot distinguish modifier sides.
+`ShortcutEventTap` consumes only matching key presses; it observes Hyper's rewritten flags and is
+paused during recording. Ordinary chords keep their Carbon registration. The recorder shows a
+permission warning for detailed chords when Accessibility is unavailable. Conflicts check overlapping
+side constraints and the active layout, so an any-side chord conflicts with either side while distinct
+left and right chords may coexist.
 
 Every built-in command is bindable: `CommandID.hotKeyAction` answers `.command(self)` by default, and
 names the three exceptions. Open in Browser and Run Shell Command are query-driven — their input is the

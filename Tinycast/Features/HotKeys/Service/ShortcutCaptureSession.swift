@@ -11,10 +11,17 @@ final class ShortcutCaptureSession {
         let owner: String
     }
 
+    enum Detail: Equatable {
+        case modifier(KeyShortcut.Modifier)
+        case character
+        case information
+    }
+
     private(set) var heldModifiers: NSEvent.ModifierFlags = []
     private(set) var heldGlobe = false
     private(set) var awaitingSecondGlobe = false
     private(set) var conflict: Conflict?
+    var detail: Detail?
 
     private static let conflictDwell: Duration = .seconds(1.5)
 
@@ -23,6 +30,7 @@ final class ShortcutCaptureSession {
     @ObservationIgnored private var conflictReset: Task<Void, Never>?
     @ObservationIgnored private var globeCommit: Task<Void, Never>?
     @ObservationIgnored private weak var activeRecorderView: NSView?
+    @ObservationIgnored private weak var activeCalloutView: NSView?
     /// The same recognizer the global monitor uses, so recording needs no tap and no grant.
     @ObservationIgnored private var detector = DoubleTapDetector()
     @ObservationIgnored private var globeDetector = GlobeTapDetector()
@@ -76,11 +84,16 @@ final class ShortcutCaptureSession {
             monitors.append(monitor)
         }
 
-        // A click ends the recording then travels on, so one click can move to another row.
+        // An outside click closes the session and travels on to the next control.
         if let monitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown],
             handler: { @MainActor [weak self, weak hotKeys] event in
-                guard self?.activeRecorderContains(event) != true else { return event }
+                guard let self else { return event }
+                _ = self.detector.handle(.otherInput, at: event.timestamp)
+                self.cancelGlobeCommit()
+                self.globeDetector.cancel()
+                guard !self.activeRecorderContains(event), !self.activeCalloutContains(event)
+                else { return event }
                 hotKeys?.recordingAction = nil
                 return event
             })
@@ -107,11 +120,13 @@ final class ShortcutCaptureSession {
         conflictReset = nil
         cancelGlobeCommit()
         conflict = nil
+        detail = nil
         heldModifiers = []
         heldGlobe = false
         detector.reset()
         globeDetector.cancel()
         activeRecorderView = nil
+        activeCalloutView = nil
     }
 
     func setActiveRecorderView(_ view: NSView) {
@@ -122,8 +137,25 @@ final class ShortcutCaptureSession {
         if activeRecorderView === view { activeRecorderView = nil }
     }
 
+    func setActiveCalloutView(_ view: NSView) {
+        activeCalloutView = view
+    }
+
+    func clearActiveCalloutView(_ view: NSView) {
+        if activeCalloutView === view { activeCalloutView = nil }
+    }
+
+    func updateShortcut(_ shortcut: KeyShortcut, action: HotKeyAction, hotKeys: HotKeyManager) {
+        commit(.combo(shortcut), action: action, hotKeys: hotKeys, keepRecording: true)
+    }
+
     private func activeRecorderContains(_ event: NSEvent) -> Bool {
         guard let view = activeRecorderView, event.window === view.window else { return false }
+        return view.bounds.contains(view.convert(event.locationInWindow, from: nil))
+    }
+
+    private func activeCalloutContains(_ event: NSEvent) -> Bool {
+        guard let view = activeCalloutView, event.window === view.window else { return false }
         return view.bounds.contains(view.convert(event.locationInWindow, from: nil))
     }
 
@@ -152,7 +184,8 @@ final class ShortcutCaptureSession {
         }
         // Not a bindable combo (e.g. a bare letter): swallow it and keep recording.
         guard let shortcut = KeyShortcut(keyCode: keyCode, modifierFlags: flags) else { return }
-        commit(.combo(shortcut), action: action, hotKeys: hotKeys)
+        detail = nil
+        commit(.combo(shortcut), action: action, hotKeys: hotKeys, keepRecording: true)
     }
 
     private func handleModifiers(
@@ -214,13 +247,19 @@ final class ShortcutCaptureSession {
         return held
     }
 
-    private func commit(_ binding: HotKeyBinding, action: HotKeyAction, hotKeys: HotKeyManager) {
+    private func commit(
+        _ binding: HotKeyBinding, action: HotKeyAction, hotKeys: HotKeyManager,
+        keepRecording: Bool = false
+    ) {
         if let owner = hotKeys.conflictOwner(of: binding, excluding: action) {
             flashConflict(Conflict(binding: binding, owner: owner))
             return
         }
         hotKeys.setBinding(binding, for: action)
-        hotKeys.recordingAction = nil
+        conflictReset?.cancel()
+        conflictReset = nil
+        conflict = nil
+        if !keepRecording { hotKeys.recordingAction = nil }
     }
 
     private func flashConflict(_ rejected: Conflict) {

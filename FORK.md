@@ -11,6 +11,7 @@ App UI uses these destinations; original copyright stays in LICENSE and bundled 
 - Native `oncast://command/<slug>` links for fixed built-in commands.
 - Launcher **⌘K → Copy Deeplink** and **⇧⌘C** for native and installed extension commands.
 - Native Confetti with the existing Raycast address retained as an alias.
+- Clickable shortcut keys with modifier-side and physical-key / key-equivalent settings.
 - External links reveal their destination; ordinary launcher actions and hotkeys keep their behavior.
 
 See [the deeplink reference](docs/features/deeplinks.md) for supported links and their limits.

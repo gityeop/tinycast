@@ -819,11 +819,16 @@ See [features/window-layouts.md](features/window-layouts.md#the-editor).
 
 ### The shortcut recorder callout
 
-`ShortcutRecorder` is a **120pt** field showing only the binding — a combo's modifiers collapse into
-one cap (`HotKeyBinding.compactKeycaps`), so any shortcut fits in two chips. Recording is narrated by
+`ShortcutRecorder` is a **120pt** field showing the binding. Recording is narrated by
 `ShortcutRecorderPopover`, a small **132 × 82** callout above it: caps, one label line, an `esc` cap in
-the top-left corner. Its fixed frame shows the prompt (`⌥ A` at half opacity, "Type a
+the top-left corner. Its frame shows the prompt (`⌥ A` at half opacity, "Type a
 shortcut"), live held keys, a pending second Globe tap, or a conflict (rejected caps + owner, orange).
+
+A recorded combo opens a **300 × 112** editor with individually clickable modifier and character
+caps. Selecting a cap expands the same callout to show the side or character-mode options; selecting
+the info button shows their explanation. Side-constrained caps carry an `L` or `R`, and the editor
+never collapses them into Hyper. Combo recording leaves this editor open until Escape, a click outside
+or window deactivation. Modifier-only recording keeps its existing completion behavior.
 
 - **An ancestor draws it.** The open recorder publishes its bounds via `ShortcutRecorderAnchorKey`;
   `.shortcutRecorderPopoverHost()` sits on `SettingsDetailView` — one host above every pane's
@@ -839,8 +844,9 @@ shortcut"), live held keys, a pending second Globe tap, or a conflict (rejected 
 - **Placement is pure.** `CalloutPlacement` (`HotKeys/UI/`) picks above-vs-below, clamps, and walks the caret;
   the harness compiles it against the real `Theme` so a retuned token can't outdate the assertions.
 - **`KeyCapChip.Scale`** is `compact` / `standard` / `hero` — three tokenised sizes, no stray frames.
-- `allowsHitTesting(false)`: clicks reach the capture session's mouse monitor; a click on the active
-  recorder toggles it off, and a click elsewhere closes it.
+- **Only the callout receives clicks.** Passive native hit regions identify the field and callout to
+  the shared capture session. Its mouse monitor permits option clicks, closes on an outside click and
+  lets that click continue to the other control. The surrounding overlay stays click-through.
 
 The calculator's inline `CalculatorCard` reuses this card language (`cardFill` + `cardStroke`) rather than the row language, since it's a highlighted answer, not a list item. A value answer is a **two-column** layout: a source column (input echo) and a target column (result), separated by a centered `arrow.right` glyph (no divider line). `LeadCardColumn` is that column, pill included, so the colour card is built from the same part rather than a copy of it. Each column optionally carries a word-name **badge pill** beneath its value (`keyCap` font, `controlSurface` fill, `keyCap` radius) — `Expression`→`Result` for scalar arithmetic, unit or currency names for typed results (`Expression`→`Kilograms`), and moment labels for a date/time calc (`12:18 AM`→`9:00 AM`, `Friday, 24 July`→`Friday, 9 April, 2027`). A trailing operator keeps the last complete result and its badge visible while the next operand is being typed.
 

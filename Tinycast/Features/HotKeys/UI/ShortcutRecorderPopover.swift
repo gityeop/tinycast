@@ -23,9 +23,64 @@ struct ShortcutRecorderPopover: View {
         var tint: Color?
     }
 
+    static func size(for hotKeys: HotKeyManager) -> CGSize {
+        guard let action = hotKeys.recordingAction, hotKeys.binding(for: action)?.shortcut != nil,
+            !hotKeys.capture.heldGlobe, !hotKeys.capture.awaitingSecondGlobe
+        else { return Theme.Size.shortcutPopover }
+        let details: CGFloat =
+            switch hotKeys.capture.detail {
+            case .modifier: Theme.Size.shortcutModifierDetails
+            case .character: Theme.Size.shortcutCharacterDetails
+            case .information: Theme.Size.shortcutInformationDetails
+            case nil: 0
+            }
+        return CGSize(
+            width: Theme.Size.shortcutEditor.width,
+            height: Theme.Size.shortcutEditor.height + details)
+    }
+
     var body: some View {
+        let size = Self.size(for: hotKeys)
+        content
+            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, Theme.Spacing.sm)
+            .padding(placement.caretEdge == .top ? .top : .bottom, Theme.Size.calloutCaretHeight)
+            .frame(width: size.width, height: size.height)
+            .background {
+                ShortcutRecorderHitRegion(capture: capture, region: .callout)
+            }
+            .glassEffect(
+                .regular, in: CalloutShape(caretEdge: placement.caretEdge, caretX: placement.caretX))
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let action = hotKeys.recordingAction,
+            let shortcut = hotKeys.binding(for: action)?.shortcut,
+            !capture.heldGlobe, !capture.awaitingSecondGlobe
+        {
+            VStack(spacing: Theme.Spacing.md) {
+                HStack {
+                    Button {
+                        hotKeys.recordingAction = nil
+                    } label: {
+                        KeyCapChip(text: "esc", scale: .compact)
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                    .accessibilityLabel("Close shortcut editor")
+                    Spacer()
+                }
+                ShortcutKeyEditor(shortcut: shortcut, action: action)
+            }
+        } else {
+            recordingPreview
+        }
+    }
+
+    private var recordingPreview: some View {
         let state = self.state
-        VStack(spacing: Theme.Spacing.sm) {
+        return VStack(spacing: Theme.Spacing.sm) {
             HStack(spacing: Theme.Spacing.sm) {
                 ForEach(Array(state.caps.enumerated()), id: \.offset) { _, cap in
                     KeyCapChip(text: cap, scale: .hero)
@@ -41,25 +96,16 @@ struct ShortcutRecorderPopover: View {
                 .truncationMode(.tail)
                 .frame(height: Theme.Size.shortcutPopoverLine)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .offset(y: Theme.Spacing.sm + 1)
-        .padding(.horizontal, Theme.Spacing.md)
-        .padding(.vertical, Theme.Spacing.sm)
-        .padding(placement.caretEdge == .top ? .top : .bottom, Theme.Size.calloutCaretHeight)
-        .frame(
-            width: Theme.Size.shortcutPopover.width, height: Theme.Size.shortcutPopover.height
-        )
         .overlay(alignment: .topLeading) {
             KeyCapChip(text: "esc", scale: .compact)
                 .opacity(0.7)
-                .padding(.leading, Theme.Spacing.md)
                 .padding(
                     .top,
                     Theme.Spacing.sm
                         + (placement.caretEdge == .top ? Theme.Size.calloutCaretHeight : 0))
         }
-        // Stock glass owns its elevation, as in `PopoverMenu` — no hand-tuned shadow.
-        .glassEffect(
-            .regular, in: CalloutShape(caretEdge: placement.caretEdge, caretX: placement.caretX))
     }
 
     private var state: State {
@@ -99,14 +145,12 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
                     placement: anchor.map { placement(field: proxy[$0], in: proxy.size) },
                     recordingAction: hotKeys.recordingAction)
             }
-            // Informational: clicks fall through to the session's mouse monitor, which closes.
-            .allowsHitTesting(false)
         }
     }
 
     private func placement(field: CGRect, in size: CGSize) -> CalloutPlacement {
         CalloutPlacement.resolve(
-            field: field, container: size, size: Theme.Size.shortcutPopover,
+            field: field, container: size, size: ShortcutRecorderPopover.size(for: hotKeys),
             gap: Theme.Spacing.sm, inset: Theme.Spacing.xs,
             cornerRadius: Theme.Radius.menuPanel, caretWidth: Theme.Size.calloutCaretWidth)
     }
@@ -122,16 +166,18 @@ private struct ShortcutRecorderPopoverLayer: View {
     @State private var isVisible = false
 
     var body: some View {
-        Color.clear.overlay {
+        ZStack {
             if let presentedPlacement {
                 ShortcutRecorderPopover(placement: presentedPlacement)
                     .scaleEffect(
                         isVisible ? 1 : 0.5, anchor: scaleAnchor(for: presentedPlacement)
                     )
                     .opacity(isVisible ? 1 : 0)
+                    .allowsHitTesting(isVisible && recordingAction != nil)
                     .position(presentedPlacement.center)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onChange(of: placement, initial: true) { _, placement in
             guard let placement, recordingAction != nil else { return }
             present(at: placement)
