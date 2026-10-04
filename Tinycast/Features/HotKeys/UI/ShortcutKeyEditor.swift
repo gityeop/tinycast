@@ -35,7 +35,7 @@ struct ShortcutKeyEditor: View {
                 {
                     let physical = shortcut.keyEquivalent == nil
                     cap(
-                        text: "\(shortcut.keyGlyph) · \(physical ? "위치" : "문자")",
+                        text: "\(shortcut.keyGlyph) · \(physical ? "Pos" : "Char")",
                         label: "Edit character key mode",
                         value: physical ? "Physical Key" : "Key Equivalent",
                         help: "Click to switch between physical key position and character across layouts."

@@ -826,7 +826,7 @@ shortcut"), live held keys, a pending second Globe tap, or a conflict (rejected 
 
 A recorded combo shows individually clickable modifier and character caps in the same frame.
 Modifier clicks cycle Any Side, Left and Right, displaying no prefix, `L` or `R`. Character clicks
-toggle Physical Key and Key Equivalent, displaying `G · 위치` or `G · 문자`. The information glyph
+toggle Physical Key and Key Equivalent, displaying `G · Pos` or `G · Char`. The information glyph
 explains the modes on hover. No key click opens options or changes the callout's size. The editor never
 collapses modifiers into Hyper. Combo recording leaves it open until Escape, a click outside or window
 deactivation. Modifier-only recording keeps its existing completion behavior.
