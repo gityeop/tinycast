@@ -262,8 +262,10 @@ struct LauncherScreen: PaletteScreen {
         }
     }
 
-    /// ⌘↵ — only an entry backed by a file on disk has somewhere to be revealed.
     func secondary(at selection: Int) -> Bool {
+        if case .calc(let result) = row(at: selection) {
+            return core.calculatorCoordinator.putAnswerInSearchBar(result)
+        }
         guard let app = entry(at: selection), app.canRevealInFinder else { return false }
         core.launcherCoordinator.showInFinder(app)
         return true
