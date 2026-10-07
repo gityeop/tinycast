@@ -16,6 +16,22 @@ App UI uses these destinations; original copyright stays in LICENSE and bundled 
 
 See [the deeplink reference](docs/features/deeplinks.md) for supported links and their limits.
 
+## Upstream updates — October 8, 2026
+
+Selected changes through upstream `71279c8d` are integrated:
+
+- IME Backspace handling and preferred-language emoji keywords, including Korean.
+- Camera preview focus, external Notes edits, microphone mute and chained calculations.
+- Launcher shortcuts, aliases and visibility in `settings.json`, including Oncast's side and
+  character options.
+- Codex web research continuity and AI Chat shortcut toggling. Deeplinks continue to reveal
+  the chat window rather than toggle it.
+- GitHub extension installation, Store updates, delayed menu-bar null renders, Browser Bookmarks,
+  action-panel shortcuts and X.com OAuth lock recovery.
+
+The existing menu-bar activation guard stays in place. Oncast keeps its app identity, signing,
+settings paths, native deeplinks and shortcut recorder. Experimental Dictation is not included.
+
 ## Build and run
 
 Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` or set

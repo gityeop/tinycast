@@ -167,7 +167,11 @@ final class LauncherCoordinator {
             core.quickAICoordinator.show(reveal: reveal)
         case .aiChat:
             dismissPalette()
-            core.aiChatCoordinator.toggleWindow()
+            if reveal {
+                core.aiChatCoordinator.showWindow()
+            } else {
+                core.aiChatCoordinator.toggleWindow()
+            }
         case .fixGrammar:
             core.quickActionCoordinator.run(.fixGrammar)
         case .rewrite:

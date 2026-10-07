@@ -18,6 +18,7 @@ struct LauncherSettingsFileTest {
         testWaitingRecords()
         testDeletedWaitingRecord()
         testMovedShortcut()
+        testShortcutOptions()
 
         print(failures == 0 ? "\nALL PASSED" : "\n\(failures) FAILED")
         exit(failures == 0 ? 0 : 1)
@@ -152,6 +153,30 @@ struct LauncherSettingsFileTest {
         check("Clipboard History releases it", fixture.hotKeys.binding(for: .command(.clipboardHistory)) == nil)
     }
 
+    private static func testShortcutOptions() {
+        let character = ASCIIKeyboardLayout.baseCharacters(for: 0..<128)[kVK_ANSI_V]!
+        for side in KeyShortcut.ModifierSide.allCases {
+            for equivalent in [nil, character] as [String?] {
+                let fixture = Fixture()
+                let expected = HotKeyBinding.combo(KeyShortcut(
+                    carbonKeyCode: kVK_ANSI_V, carbonModifiers: cmdKey | shiftKey,
+                    modifierSides: [.command: side], keyEquivalent: equivalent))
+                fixture.hotKeys.setBinding(expected, for: .command(.clipboardHistory))
+                let source = fixture.file.commandsBinding(for: .clipboardCommands, owner: .clipboard)
+                let text = source.read()["clipboard-history"]!["shortcut"]!
+                let destination = fixture.shortcuts.binding(
+                    for: .launcherShortcut, action: .togglePalette, name: "App Launcher")
+                let issues = destination.write(text) + source.write(.object([]))
+                    + fixture.shortcuts.commit()
+                check("side and character options move across sections", issues.isEmpty)
+                check(
+                    "the moved binding preserves its options",
+                    fixture.hotKeys.binding(for: .togglePalette) == expected)
+                check("the mirror preserves the shortcut spelling", destination.read() == text)
+            }
+        }
+    }
+
     private static func entry(_ bundleID: String, kind: AppEntry.Kind) -> AppEntry {
         AppEntry(
             id: bundleID, name: "Fixture", url: URL(fileURLWithPath: "/fixture"),
@@ -223,7 +248,14 @@ final class HotKeyManager {
     func binding(for action: HotKeyAction) -> HotKeyBinding? { bindings[action] }
     func setBinding(_ binding: HotKeyBinding?, for action: HotKeyAction) { bindings[action] = binding }
     func conflictOwner(of binding: HotKeyBinding, excluding action: HotKeyAction) -> String? {
-        bindings.first { $0.key != action && binding.conflicts(with: $0.value) }
-            .map { String(describing: $0.key) }
+        bindings.first { candidate in
+            guard candidate.key != action else { return false }
+            if let shortcut = binding.shortcut, let other = candidate.value.shortcut {
+                return shortcut.overlaps(with: other) { code, modifiers in
+                    KeyShortcut.character(for: code, carbonModifiers: modifiers)
+                }
+            }
+            return binding == candidate.value
+        }.map { String(describing: $0.key) }
     }
 }

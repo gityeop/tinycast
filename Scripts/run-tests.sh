@@ -154,7 +154,6 @@ run launcher-settings-file-test \
                            Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
                            Tinycast/Features/HotKeys/Model/HotKeySpelling.swift \
                            Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
                            Tinycast/Features/HotKeys/Model/HyperKey.swift \
                            Tinycast/Platform/ASCIIKeyboardLayout.swift \
                            Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
@@ -298,6 +297,11 @@ run fallback-test          Tinycast/Features/Launcher/Model/Fallback.swift \
                            Tinycast/Features/SystemActions/Model/SystemAction.swift \
                            Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
                            Tinycast/Features/Snippets/Model/Snippet.swift
+run command-dispatch-test  Tinycast/Features/Launcher/UI/LauncherCoordinator.swift \
+                           $L/CommandDeepLink.swift $L/CommandID.swift \
+                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Tinycast/Features/Extensions/Model/ExtensionDeepLink.swift \
+                           Tinycast/Features/Extensions/Model/ExtensionLaunchType.swift
 run command-deeplink-test  $L/CommandDeepLink.swift $L/CommandID.swift \
                            Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
                            Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
