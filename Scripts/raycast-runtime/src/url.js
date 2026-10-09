@@ -80,6 +80,10 @@ export class URLSearchParams {
   get size() {
     return this._pairs.length;
   }
+  // axios sends an untagged instance as an object.
+  get [Symbol.toStringTag]() {
+    return "URLSearchParams";
+  }
   forEach(fn, thisArg) {
     for (const [key, value] of this._pairs.slice()) fn.call(thisArg, value, key, this);
   }
@@ -265,7 +269,7 @@ export function fileURLToPath(input, options = {}) {
     throw nodeTypeError("ERR_INVALID_URL", "Invalid URL");
   }
   if (options?.windows) {
-    throw new Error("Windows file paths are not supported in Oncast extensions.");
+    throw new Error("Windows file paths are not supported in Tinycast extensions.");
   }
   const hostname = decodedFileHostname(parsed.hostname);
   if (hostname !== "" && hostname.toLowerCase() !== "localhost") {
