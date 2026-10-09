@@ -1830,7 +1830,7 @@ export const nodeModules = {
   readline: unsupportedModule("readline"),
   tty: { isatty: () => false },
   vm: unsupportedModule("vm"),
-  module: { createRequire: () => requireStub, builtinModules: [] },
+  module: { builtinModules: [] },
   constants: {},
   cluster: { isPrimary: true, isMaster: true },
   inspector: {},
@@ -1839,37 +1839,3 @@ export const nodeModules = {
   diagnostics_channel: diagnosticsChannel,
 };
 
-function requireStub(name) {
-  throw new Error(`createRequire is not supported in Oncast extensions (tried to load "${name}").`);
-}
-
-// Every remaining Node builtin resolves to a refuse-on-use stub. Bundles reference the whole
-// long tail (http2, domain, repl, …) from dependencies that only touch them on paths an
-// extension never reaches, so a require-time throw would fail extensions that actually work.
-const REMAINING_BUILTINS = [
-  "assert/strict", "console", "dns/promises", "domain", "http2",
-  "inspector/promises", "path/posix", "path/win32", "readline/promises", "repl",
-  "stream/consumers", "sys", "trace_events", "util/types", "wasi", "sea", "sqlite", "test",
-  "test/reporters",
-];
-for (const name of REMAINING_BUILTINS) {
-  if (!nodeModules[name]) nodeModules[name] = unsupportedModule(name);
-}
-nodeModules["assert/strict"] = assert;
-nodeModules["path/posix"] = path;
-nodeModules["path/win32"] = path;
-nodeModules["util/types"] = util.types;
-nodeModules["dns/promises"] = nodeModules.dns;
-nodeModules["readline/promises"] = nodeModules.readline;
-nodeModules.console = globalThis.console;
-
-// Node builtins are addressable with and without the `node:` prefix.
-for (const name of Object.keys(nodeModules)) {
-  nodeModules[`node:${name}`] = nodeModules[name];
-}
-
-globalThis.process = process;
-globalThis.Buffer = Buffer;
-globalThis.global = globalThis;
-
-export { Buffer, process, EventEmitter };
