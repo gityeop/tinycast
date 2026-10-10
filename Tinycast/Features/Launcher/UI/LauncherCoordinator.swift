@@ -247,6 +247,10 @@ final class LauncherCoordinator {
         case .createQuicklink:
             dismissPalette()
             quicklinkCoordinator.editQuicklink(nil)
+        case .createCustomCommand:
+            customCommandCoordinator.editCustomCommand(nil)
+        case .searchCustomCommands:
+            customCommandCoordinator.showCustomCommands()
         case .importQuicklinks:
             dismissPalette()
             Task { await quicklinkCoordinator.importQuicklinks() }

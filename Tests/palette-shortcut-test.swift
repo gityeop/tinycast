@@ -81,6 +81,13 @@ struct PaletteShortcutTests {
         expect(resolve("j", command: true), .continueInChat, "⌘J continues Quick AI in AI Chat")
         expect(resolve("n", command: true), .newItem, "⌘N starts a new one")
         expect(resolve("n", command: true, shift: true), nil, "⇧⌘N is not the new-item chord")
+        expect(resolve("e", command: true), .edit, "⌘E edits the row")
+        expect(resolve("e"), nil, "typing E stays with the field")
+        expect(resolve("e", command: true, shift: true), nil, "⇧⌘E is not the edit chord")
+        expect(resolve("e", command: true, option: true), nil, "⌥⌘E is not the edit chord")
+        expect(resolve("e", command: true, control: true), nil, "⌃⌘E is not the edit chord")
+        expect(resolve("d", command: true), .duplicate, "⌘D duplicates the row")
+        expect(resolve("d", command: true, shift: true), nil, "⇧⌘D is not the duplicate chord")
         expect(resolve(",", command: true, option: true), .settings, "⌥⌘, opens the screen's settings")
         expect(resolve(",", command: true), nil, "⌘, stays the app's own Settings")
 
