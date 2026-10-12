@@ -116,35 +116,34 @@ Two host-call flavours:
 
 `Tinycast/Features/Extensions/`, split the same way as every other feature:
 
-| File | Role |
-| --- | --- |
-| `Service/ExtensionRuntime.swift` | the `JSContext`, host-function installation, timers, exception reporting |
-| `Service/ExtensionHostBridge.swift` | main-actor host APIs (clipboard, storage, cache, window, toasts, system, oauth) |
-| `Service/ExtensionNodeShims.swift` | the synchronous `fs` / `os` / `child_process` / `crypto` / `zlib` services |
-| `Service/ExtensionFetcher.swift` | HTTP over `URLSession` or a Unix socket, plus async `exec` collection and the shared PATH resolver |
-| `Service/ExtensionWebSocketBridge.swift` | `URLSessionWebSocketTask` connections, opened and read from JS |
-| `Service/ExtensionNameResolver.swift` | `getaddrinfo`, which is how a `.local` name resolves |
-| `Service/ExtensionOAuthKeychain.swift` | secure OAuth token storage backed by macOS Keychain |
-| `Service/ExtensionOAuthSession.swift` | PKCE state tracking, browser launch, and callback redirect resolution |
-| `Service/ExtensionStorage.swift` | per-extension `LocalStorage`, `Cache` and preference values (one JSON file each) |
-| `Service/ExtensionCommandMetadataStore.swift` | every command's subtitle override, refresh bookkeeping and menu-bar state, in one small file |
-| `Service/ExtensionCatalog.swift` | discovery on disk, install, uninstall, import-from-Raycast |
-| `Service/ExtensionCleanup.swift` | the build workspace's name, the launch sweep, and reclaiming orphans |
-| `Service/ExtensionManager.swift` | the single owner: installed set, foreground session, no-view refreshes, menu-bar manager, launcher entries |
-| `Service/ExtensionMenuBarManager.swift` | serialized refreshes, short-lived menu sessions and their deadlines |
-| `Service/ExtensionMenuBarHost.swift` | immutable per-session namespace and menu-specific host behavior |
-| `UI/ExtensionMenuBarController.swift` | native `NSStatusItem` and `NSMenu` rendering and dispatch |
-| `UI/ExtensionMenuBarImage.swift` | small native icons with light/dark variants |
-| `Model/ExtensionManifest.swift` | `package.json` → commands, preferences, arguments |
-| `Model/ExtensionRefreshPolicy.swift` | background-refresh decisions: interval parsing, due dates, backoff |
-| `Model/ExtensionLaunchType.swift` | `userInitiated` / `background`, mirroring `@raycast/api` `LaunchType` |
-| `Model/RenderNode.swift` | the decoded render tree (`RenderTree` / `RenderNode` / `RenderValue`) |
-| `Model/ExtensionAppearance.swift` | the per-extension icon override and its tint palette |
-| `Service/ExtensionAppearanceStore.swift` | where those overrides persist |
-| `Service/SymbolCatalog.swift` | the SF Symbol list read from `CoreGlyphs.bundle` |
-| `UI/ExtensionScreen.swift` | flattens one screen into the palette's row order |
-| `UI/ExtensionCommandScreen.swift` | that order adapted to `PaletteScreen`, so the flat selection indexes it |
-| `UI/ExtensionCoordinator.swift` | launching, leaving, and every host callback that touches a surface |
+| File                                          | Role                                                                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `Service/ExtensionRuntime.swift`              | the `JSContext`, host-function installation, timers, exception reporting                                   |
+| `Service/ExtensionHostBridge.swift`           | main-actor host APIs (clipboard, storage, cache, window, toasts, system)                            |
+| `Service/ExtensionSignInSession.swift`        | the browser step of an extension's OAuth sign-in (`ASWebAuthenticationSession`)                     |
+| `Service/ExtensionNodeShims.swift`            | the synchronous `fs` / `os` / `child_process` / `crypto` / `zlib` services                                 |
+| `Service/ExtensionFetcher.swift`              | HTTP over `URLSession` or a Unix socket, plus async `exec` collection and the shared PATH resolver         |
+| `Service/ExtensionWebSocketBridge.swift`      | `URLSessionWebSocketTask` connections, opened and read from JS                                             |
+| `Service/ExtensionNameResolver.swift`         | `getaddrinfo`, which is how a `.local` name resolves                                                       |
+| `Service/ExtensionStorage.swift`              | per-extension `LocalStorage`, `Cache` and preference values (one JSON file each)                           |
+| `Service/ExtensionCommandMetadataStore.swift` | every command's subtitle override, refresh bookkeeping and menu-bar state, in one small file               |
+| `Service/ExtensionCatalog.swift`              | discovery on disk, install, uninstall, import-from-Raycast                                                 |
+| `Service/ExtensionCleanup.swift`              | the build workspace's name, the launch sweep, and reclaiming orphans                                       |
+| `Service/ExtensionManager.swift`              | the single owner: installed set, foreground session, no-view refreshes, menu-bar manager, launcher entries |
+| `Service/ExtensionMenuBarManager.swift`       | serialized refreshes, short-lived menu sessions and their deadlines                                        |
+| `Service/ExtensionMenuBarHost.swift`          | immutable per-session namespace and menu-specific host behavior                                            |
+| `UI/ExtensionMenuBarController.swift`         | native `NSStatusItem` and `NSMenu` rendering and dispatch                                                  |
+| `UI/ExtensionMenuBarImage.swift`              | small native icons with light/dark variants                                                                |
+| `Model/ExtensionManifest.swift`               | `package.json` → commands, preferences, arguments                                                          |
+| `Model/ExtensionRefreshPolicy.swift`          | background-refresh decisions: interval parsing, due dates, backoff                                         |
+| `Model/ExtensionLaunchType.swift`             | `userInitiated` / `background`, mirroring `@raycast/api` `LaunchType`                                      |
+| `Model/RenderNode.swift`                      | the decoded render tree (`RenderTree` / `RenderNode` / `RenderValue`)                                      |
+| `Model/ExtensionAppearance.swift`             | the per-extension icon override and its tint palette                                                       |
+| `Service/ExtensionAppearanceStore.swift`      | where those overrides persist                                                                              |
+| `Service/SymbolCatalog.swift`                 | the SF Symbol list read from `CoreGlyphs.bundle`                                                           |
+| `UI/ExtensionScreen.swift`                    | flattens one screen into the palette's row order                                                           |
+| `UI/ExtensionCommandScreen.swift`             | that order adapted to `PaletteScreen`, so the flat selection indexes it                                    |
+| `UI/ExtensionCoordinator.swift`               | launching, leaving, and every host callback that touches a surface                                         |
 
 `ExtensionRuntime` is `@unchecked Sendable` deliberately and narrowly: every `JSContext` / `JSValue`
 touch happens on one private serial queue, and only plain `Sendable` values cross in or out
@@ -666,33 +665,25 @@ interval floor instead of sixty.
 `showHUD`, `confirmAlert`, `closeMainWindow`, `popToRoot`, `clearSearchBar`, `open`, `trash`,
 `showInFinder`, `getApplications`, `getDefaultApplication`, `getFrontmostApplication`,
 `getSelectedText`, `getSelectedFinderItems`, `launchCommand`, `updateCommandMetadata`,
-`openExtensionPreferences`,
-`useNavigation`, `OAuth`, `Icon`, `Color`, `Image.Mask`, `Keyboard.Shortcut.Common`, `LaunchType`.
-
-**OAuth 2.0 PKCE** — `OAuth.PKCEClient`, `OAuth.TokenSet`, `OAuth.RedirectMethod`, with S256 challenges and
-tokens in the login Keychain (service `com.tinycast.extensions.oauth`, `kSecAttrAccessibleWhenUnlocked`),
-scoped per extension and dropped on uninstall.
-
-The redirect address belongs to the extension author's OAuth app registration, so Tinycast cannot choose
-it — it can only be there to catch it. **Tinycast therefore claims `raycast`, `com.raycast` and `tinycast`
-as URL schemes**, which is what makes all three of Raycast's redirect methods land back in the app:
-
-| `RedirectMethod` | Registered address | How it returns |
-| --- | --- | --- |
-| `App` | `raycast://oauth?package_name=Extension` | straight to Tinycast, no server |
-| `AppURI` | `com.raycast:/oauth?package_name=Extension` | straight to Tinycast, no server |
-| `Web` | `https://raycast.com/redirect?packageName=Extension` | through Raycast's page, which reopens a claimed scheme |
-
-Claiming `raycast` means an installed Raycast competes with Tinycast for those links and macOS picks the
-winner. That is a deliberate trade: without it, `App` redirects have nowhere to land. `Web` additionally
-depends on a page Raycast can change at any time — `ExtensionOAuthSession` times out after five minutes so
-a redirect that never arrives cannot wedge the palette.
+`openExtensionPreferences`, `OAuth`,
+`useNavigation`, `Icon`, `Color`, `Image.Mask`, `Keyboard.Shortcut.Common`, `LaunchType`.
 
 **`raycast://` URLs** — extensions address Raycast by scheme; the most common is a bare
 `open("raycast://")` to bring the window back after something stole focus (1Password's auth flow does
 this). `ExtensionHostBridge` keeps those inside Tinycast: `raycast://extensions/<author>/<extension>/<command>`
 runs that command when it's installed, anything else reopens the palette. Handing them to the workspace
 would launch Raycast itself.
+
+**`OAuth`** — `PKCEClient` builds the RFC 7636 request in JS, and `@raycast/utils`' `OAuthService`
+runs on top of it unchanged. The browser step is `ExtensionSignInSession`: providers have Raycast's
+fixed redirect URIs registered, which all end on `raycast://oauth` or `com.raycast:/oauth`, and
+`ASWebAuthenticationSession` intercepts that scheme itself, so an installed Raycast cannot take the
+redirect. Raycast's web redirect page drops `state`, so only a returned `state` is checked. Each
+provider's token set lives in the extension's data file, beside its preferences, keyed by
+`providerId`. Only a command the user opened can start a sign-in; a background refresh fails until
+then. While the browser is up the palette hides, but Pop to Root Search holds off, because resetting
+would stop the command and cancel the sign-in. Summoning the palette meanwhile returns to the waiting
+command, and the palette comes back on its own when the redirect lands.
 
 **Node built-ins** — `path`, `fs` (+ `fs/promises`, `createReadStream`/`createWriteStream`, a snapshot-backed `opendir`, and
 the descriptor calls `tar` unpacks through), `os`,
@@ -878,20 +869,19 @@ contains frames only (V8 repeats the message, so the headline has to be prepende
 Everything is under `~/Library/Application Support/<bundle id>/`, keyed by bundle id so a Debug run
 never shares with an installed copy.
 
-| What | Where | Gone on uninstall |
-| --- | --- | --- |
-| The extension | `extensions/<name>/` | yes |
-| `LocalStorage`, `Cache`, preferences | `extension-data/<safe name>.json` | yes |
-| Command subtitle, refresh state | `extension-commands.json` | yes |
-| Installed store version | `extension-versions.json` | yes |
-| `environment.supportPath` | `extension-support/<safe name>/` | yes |
-| OAuth tokens | macOS Keychain (`com.tinycast.extensions.oauth`) | yes |
-| Menu-bar activation and snapshot | `extension-commands.json` | yes |
-| Icon override | `UserDefaults` → `extensionAppearances` | yes |
-| Command shortcuts | `UserDefaults` → `hotkey.extensionCommand.<entry id>` | yes |
-| Favorites, hidden items | `UserDefaults` → `favoriteApps`, `hiddenItemKeys` | yes |
-| User alias | `UserDefaults` → `launcherAliases` | yes |
-| Launch ranking | `launcher-ranking.json` | yes |
+| What                                               | Where                                                 | Gone on uninstall |
+| -------------------------------------------------- | ----------------------------------------------------- | ----------------- |
+| The extension                                      | `extensions/<name>/`                                  | yes               |
+| `LocalStorage`, `Cache`, preferences, OAuth tokens | `extension-data/<safe name>.json`                     | yes               |
+| Command subtitle, refresh state                    | `extension-commands.json`                             | yes               |
+| Installed store version                            | `extension-versions.json`                             | yes               |
+| `environment.supportPath`                          | `extension-support/<safe name>/`                      | yes               |
+| Menu-bar activation and snapshot                   | `extension-commands.json`                             | yes               |
+| Icon override                                      | `UserDefaults` → `extensionAppearances`               | yes               |
+| Command shortcuts                                  | `UserDefaults` → `hotkey.extensionCommand.<entry id>` | yes               |
+| Favorites, hidden items                            | `UserDefaults` → `favoriteApps`, `hiddenItemKeys`     | yes               |
+| User alias                                         | `UserDefaults` → `launcherAliases`                    | yes               |
+| Launch ranking                                     | `launcher-ranking.json`                               | yes               |
 
 `ExtensionCatalog.safeName` maps an npm-style name onto one path segment, and is the **only** copy of
 that mapping — a second one that drifts orphans every file the first one wrote.

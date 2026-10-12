@@ -24,14 +24,12 @@ published extensions work too.
 `showHUD`, `confirmAlert`, `closeMainWindow`, `popToRoot`, `clearSearchBar`, `open`, `trash`,
 `showInFinder`, `getApplications`, `getDefaultApplication`, `getFrontmostApplication`,
 `getSelectedText`, `getSelectedFinderItems`, `launchCommand`, `updateCommandMetadata`,
-`openExtensionPreferences`, `useNavigation`, `OAuth`, `Icon`, `Color`, `Image.Mask`,
+`openExtensionPreferences`, `OAuth`, `useNavigation`, `Icon`, `Color`, `Image.Mask`,
 `Keyboard.Shortcut.Common`, `LaunchType`.
 
-**Signing in with OAuth.** `OAuth.PKCEClient` works with all three of Raycast's redirect methods.
-Tokens are kept in your login Keychain, one set per extension, and removed when you uninstall it.
-
-To catch the redirect, Tinycast registers the `raycast://` link type. If Raycast is also installed,
-macOS picks which app gets those links. A sign-in that never comes back gives up after five minutes.
+**Sign-in with OAuth.** Extensions like GitHub sign you in through your browser, and the palette
+comes back when you finish. Sign in from one of the extension's commands first: a background
+refresh or menu bar item can't start a sign-in on its own.
 
 **Node built-ins.** `path`, `fs` and `fs/promises`, `os`, `child_process`, `crypto`, `zlib`,
 `http` and `https`, `stream`, `util`, `events`, `buffer`, `url`, `querystring`, `punycode`, `assert`,
