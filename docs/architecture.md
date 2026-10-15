@@ -115,7 +115,8 @@ Clipboard text recognition is the one feature that leaves the process. `AppCore`
 the stateless `ClipboardTextWorker` runs one bundled `ClipboardTextHelper` per item, from
 `Contents/Helpers`, and reaps it before returning. Vision's and PDFKit's allocations therefore belong
 to a process that exits, and the helper — which has no database, clipboard or settings access — is
-handed an input path and answers with bounded text down a pipe.
+handed an input path and answers with bounded text down a pipe. Its `thumbnail` mode writes the
+clipboard's downscaled image copies, so a full-size decode stays out of the app unless that fails.
 
 ## Entry points and windows
 
