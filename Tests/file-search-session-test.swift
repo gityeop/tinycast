@@ -69,6 +69,7 @@ struct FileSearchSessionTests {
         await cancellationPreventsPendingWork()
         await refreshRerunsThePublishedQuery()
         await blankScreenOpensOnKeptRecents()
+        await recentRefreshLeavesTheOpenListAlone()
         await blankQueryLoadsRecents()
         await filterChangeRerunsTheQuery()
 
@@ -133,8 +134,8 @@ struct FileSearchSessionTests {
 
         let snapshot = await probe.snapshot()
         expect(
-            snapshot.calls == ["", "report", "report"],
-            "an idle session prepares recents, and an open one re-asks its query")
+            snapshot.calls == ["", "report", "report", ""],
+            "an idle session prepares recents, and an open one re-asks its query and refreshes them")
     }
 
     static func blankScreenOpensOnKeptRecents() async {
@@ -154,6 +155,19 @@ struct FileSearchSessionTests {
         expect(
             session.results.first?.name != "report",
             "a typed query still waits for its own results")
+    }
+
+    static func recentRefreshLeavesTheOpenListAlone() async {
+        let probe = FileSearchProbe()
+        let session = makeSession(probe: probe)
+        session.search("report")
+        await waitUntil { session.state == .ready }
+        session.refreshRecent()
+        try? await Task.sleep(for: .milliseconds(150))
+        expect(session.results.first?.name == "report", "a Recent refresh leaves the open list alone")
+        session.cancel()
+        session.search("")
+        expect(!session.results.isEmpty, "the next blank screen opens on the refreshed rows")
     }
 
     static func blankQueryLoadsRecents() async {

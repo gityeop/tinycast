@@ -87,8 +87,10 @@ word or camel-case boundary +1000, terms typed in order +1500, first term ending
 `~/Library` and anything inside a bundle.
 
 An empty query lists **Recent**: the 20 newest files with prior 2, by modification date. The session
-keeps those rows across closes and computes them whenever the index is swapped in, so the screen opens
-on them at once and refreshes them in the background.
+keeps those rows across closes and recomputes them in the background whenever the index is swapped in
+or a live update reaches a file Recent can list, so the screen opens on current rows at once. That
+recompute never touches the published results, so a list on screen holds still. Each run is stamped,
+and one that finishes after a newer one is dropped.
 
 The 2026-10-13 benchmark (`Tests/file-search-performance.swift`, `/System /Applications /Library /usr`,
 844,911 entries) crawled in 5.2 s with a 103 MB helper peak and wrote a 16.6 MB index, down from 40 MB
@@ -101,8 +103,9 @@ optimization, queries took 0.3–2.7 ms and single letters 3.4 ms.
 queue, with a one-second latency and `NoDefer`: a lone change lands at once, and a folder that keeps
 changing is relisted about once a second instead of once per event. fsearch's 10 ms latency relisted a
 5,000-entry folder written 100 times a second about 58 times a second, a sixth of a core (#1599). A batch
-that changes the item count asks the main actor to redraw it at most once a second; any other batch never
-leaves the events queue. For each
+that changes the item count, or adds, removes or re-dates a file Recent can list, asks the main actor to
+redraw the count and recompute Recent at most once a second; any other batch never leaves the events
+queue. `FileIndex.recentRevision` is how a batch tells: it moves only for those files. For each
 event `FileIndex.apply(folder:)` acts only if the path is an indexed folder; any other event is in an
 ignored subtree, or it belongs to a new folder that its parent's event will find. The folder is relisted
 through one reused `FileIndexCrawler.Lister` and merged against its block: both sides are sorted by name
@@ -186,9 +189,8 @@ The extension decides without touching the disk, except where it cannot: an unde
 off the main actor once per selection — no NUL and valid UTF-8 is text, anything else falls back to
 what the extension declares. `PlainTextSurface` copies QuickLook's own text preview (fixed-pitch 11pt,
 3pt inset, unselectable), so a `.jsx` reads like a `.swift`.
-**Only the ⌘Y overlay autoplays.** `autoplays` is the surface's one parameter and the pane leaves it
-off: arrow-keying a list must not start a movie, while opening Quick Look on one is the ask itself.
-The player view is `KeyboardFocusRefusing` either way, so clicking its transport leaves the caret in
+**Nothing autoplays**: arrow-keying a list must not start a movie.
+The player view is `KeyboardFocusRefusing`, so clicking its transport leaves the caret in
 the search field; see [palette.md](palette.md#the-keyboard-belongs-to-the-search-field).
 The player is File Search's own, deliberately: the clipboard's preview is a separate surface with its own
 sizing, and copying forty lines of `AVPlayerView` teardown is the cheaper trade.
@@ -198,27 +200,18 @@ sizing, and copying forty lines of `AVPlayerView` teardown is the cheaper trade.
 measured against the real machinery inside a panel shaped like the palette's — borderless, floating,
 non-activating — a swap paints in about 8 ms, and the first load in a process in about 130 ms. Nothing
 about that is worth debouncing, and the debounce that was there only made a click feel slow. The surface
-is torn down by not being mounted: when the palette is ordered out, when the ⌘Y overlay covers it, or on
+is torn down by not being mounted: when the palette is ordered out, or on
 a folder, whose preview is its icon. Information rows are the compact variant; their disk reads happen once per selection
 in a detached task, never in `body`, and a folder shows no Size — its own record is a few bytes, which is
 never what the row means.
 
-Quick Look (⌘Y) draws **inside the panel**: the palette hides itself on `windowDidResignKey` and the panel
-is non-activating, so a system `QLPreviewPanel` would take key and close the palette under itself.
-`FileSearchQuickLook` hosts the same two surfaces the pane does, following the selection. **Escape is
-answered by `PalettePanel.onEscape`**, not by the palette's own key handler: a focused `AVPlayerView`
-takes the key window's Escape first, and `sendEvent` is the one place ahead of it. **Only the margin
-around the card dismisses on a click** — a tap over the preview belongs to the preview's own transport,
-and a dismissing gesture laid over the whole overlay swallowed the play button — so the Close button is
-the pointer's way out. Its corners are concentric, each radius the one outside it less its own inset, and
-the overlay is cleared whenever the palette is ordered out: the tree stays mounted, and a preview must
-not outlive the window.
+**There is no Quick Look action.** The pane already previews the selection, and ↵ opens the file in
+its default app. A system `QLPreviewPanel` would take key, and the palette hides on `windowDidResignKey`.
 
 | Row | Chord | What it does |
 | --- | --- | --- |
 | Open File / Open Folder | ↵ | `NSWorkspace`'s asynchronous configuration API; hides the palette without restoring focus, and reports a failure through the dialog controller |
 | Show in Finder | ⌘↵ | reveals and dismisses |
-| Quick Look | ⌘Y | the in-panel overlay above |
 | Share… | — | `NSSharingServicePicker`, anchored to the palette's trailing edge so the row it was opened from stays visible beside it. Escape or a click elsewhere dismisses it, and the palette is never hidden, so the flow returns to the same row. There is no chord: the destinations are the system's, and it is the only place a system popover is right |
 | Copy File | ⇧⌘C | the file itself on the pasteboard through `PasteboardFiles.write`, which declares `.fileURL` and the path as `.string` |
 | Copy Name | ⌥⌘C | through `Paster`, palette stays open |
@@ -245,8 +238,31 @@ a mail being written — through the same `onRowClick(drag:)` the clipboard uses
 explains. Copy matters more here than there: every result is the user's own file, and on the boot
 volume a plain file-URL drag would default to moving it. The image is the row's fitted tile, already
 warm by the time a pointer can reach it; a landed drop hides the palette through
-`PaletteCoordinator.dragLanded()`. There is no stat first: a result is seconds old, and its session is
-cleared whenever the palette hides.
+`PaletteCoordinator.dragLanded()`. There is no stat first: a result is at most the Pop to Root Search
+delay old, since the reset clears its session.
+
+## In the launcher
+
+**Show in launcher** (`fileSearchShowInLauncher`, under the feature switch) adds a **Files** section to
+root search, between the ranked results and the `Use "…" with` fallbacks, so ↵ on a typed app name never
+opens a file. It lists the top five hits (`FileSearchQuery.launcherLimit`) once the trimmed query has
+three characters (`launcherMinimumLength`), the threshold category search uses. Shorter cancels the
+query and releases its rows.
+
+The launcher borrows this screen's `FileSearchSession` rather than keeping its own. Only one palette
+mode shows at a time, so nothing is held twice. An index swap or a trashed row updates both. And the
+Search Files fallback opens on the request the launcher just answered, with its rows already listed.
+`FileSearchCoordinator.searchFromLauncher` is the one entry point: `RootPaletteView` calls it per
+keystroke and when the launcher becomes the mode, and `applyLauncherFiles` re-runs it when the switch
+changes. `cancel()` returns early on an idle session, so with the section off a keystroke publishes
+nothing.
+
+A Files row is not an `AppEntry`: no `Kind`, no ranking, favorite, alias or Hide from Search. It is
+`LauncherScreen.Row.file`, id-prefixed `file-` because an application's entry id is its bundle path. It
+draws `FileSearchRow` with its location — name, dimmed parent path, then File or Folder — and answers
+the screen's own row actions: ↵ opens, ⌘↵ reveals, the copy, paste and trash chords run
+`FileSearchActionsMenu.perform`, and a row drags out as a copy. Row icons come from the same transient
+fitted cache, purged when the palette hides.
 
 ## Invocation
 

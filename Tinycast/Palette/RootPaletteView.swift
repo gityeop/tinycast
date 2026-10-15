@@ -422,7 +422,6 @@ struct RootPaletteView: View {
                 vm.fileSearchFilter = .all
                 vm.emojiCategoryFilter = .all
                 vm.emojiGridColumnsOverride = nil
-                vm.fileSearchQuickLook = false
                 if menuOpen { closeMenus() }
                 land(restoringNavigation: true)
                 searchFocused = !screen.hidesSearchField
