@@ -147,7 +147,7 @@ final class LauncherCoordinator {
         paletteCoordinator.hidePalette(restoreFocus: false)
         switch app.kind {
         case .application:
-            AppLauncher.launch(app.url)
+            AppLauncher.launch(app.url, allowsRunningApplicationSubstitution: false)
         case .systemSettings:
             guard let bundleID = app.bundleID else { return }
             AppLauncher.openSettingsPane(bundleID: bundleID)
@@ -342,8 +342,10 @@ final class LauncherCoordinator {
     func quit(_ app: AppEntry) {
         guard app.kind == .application, let bundleID = app.bundleID else { return }
         // Nothing here takes focus, so hand it back unless that app is on its way out.
-        let quittingPreviousApp = windowController.previousApp?.bundleIdentifier == bundleID
-        guard AppLauncher.quit(bundleID: bundleID) else { return }
+        let quittingPreviousApp =
+            windowController.previousApp?.bundleURL?.resolvingSymlinksInPath().standardizedFileURL.path
+            == app.id
+        guard AppLauncher.quit(bundleID: bundleID, url: app.url) else { return }
         paletteCoordinator.hidePalette(restoreFocus: !quittingPreviousApp)
     }
 }
