@@ -32,6 +32,7 @@ enum AppSettingsKey: String, CaseIterable {
     case fileSearchEnabled = "fileSearchEnabled"
     case fileSearchScopes = "fileSearchScopes"
     case fileSearchIgnorePatterns = "fileSearchIgnorePatterns"
+    case fileSearchRemovedDefaultPatterns = "fileSearchRemovedDefaultPatterns"
     case notesEnabled = "notesEnabled"
     case notesRendersMarkdown = "notesRendersMarkdown"
     case notesShowsFormattingBar = "notesShowsFormattingBar"

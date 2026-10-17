@@ -306,6 +306,19 @@ final class AppSettings {
         }
     }
 
+    var fileSearchRemovedDefaultPatterns: [String] {
+        didSet {
+            defaults.set(
+                fileSearchRemovedDefaultPatterns,
+                forKey: Key.fileSearchRemovedDefaultPatterns.rawValue)
+        }
+    }
+
+    var fileSearchEffectiveIgnorePatterns: [String] {
+        FileSearchIgnoreList.patterns(
+            added: fileSearchIgnorePatterns, removedDefaults: fileSearchRemovedDefaultPatterns)
+    }
+
     var notesEnabled: Bool {
         didSet { defaults.set(notesEnabled, forKey: Key.notesEnabled.rawValue) }
     }
@@ -657,6 +670,8 @@ final class AppSettings {
             ?? FileSearchScope.defaultScopes
         fileSearchIgnorePatterns =
             defaults.stringArray(forKey: Key.fileSearchIgnorePatterns.rawValue) ?? []
+        fileSearchRemovedDefaultPatterns =
+            defaults.stringArray(forKey: Key.fileSearchRemovedDefaultPatterns.rawValue) ?? []
         notesEnabled = defaults.bool(forKey: Key.notesEnabled.rawValue)
         notesRendersMarkdown =
             defaults.object(forKey: Key.notesRendersMarkdown.rawValue) == nil
