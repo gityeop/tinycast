@@ -250,7 +250,7 @@ final class LauncherCoordinator {
         case .createCustomCommand:
             customCommandCoordinator.editCustomCommand(nil)
         case .searchCustomCommands:
-            customCommandCoordinator.showCustomCommands()
+            customCommandCoordinator.showCustomCommands(reveal: reveal)
         case .importQuicklinks:
             dismissPalette()
             Task { await quicklinkCoordinator.importQuicklinks() }

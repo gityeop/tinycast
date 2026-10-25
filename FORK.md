@@ -32,6 +32,24 @@ Selected changes through upstream `71279c8d` are integrated:
 The existing menu-bar activation guard stays in place. Oncast keeps its app identity, signing,
 settings paths, native deeplinks and shortcut recorder. Experimental Dictation is not included.
 
+## Upstream updates — October 26, 2026
+
+Selected bug fixes and features through upstream `21f4b901` are integrated:
+
+- Clipboard trimming, stale file previews, and smaller image thumbnails.
+- Extension screen cleanup, paste targeting, navigation search state, bundled modules, Docker sockets,
+  `createRequire`, SDK 2.8.2 and OAuth redirect handling. OAuth tokens stay in Oncast's Keychain store.
+- Notes focus, action-menu focus/click handling, quicklink argument focus, duplicate app installations,
+  running-app indicators, AI provider errors, longer Quick Action output, and volume steps.
+- File Search uses an out-of-process filename index and FSEvents instead of Spotlight. It requires
+  Full Disk Access, searches the home folder by default, and offers editable default ignore patterns.
+  File Search remains opt-in and opens its dedicated pane; root-search file rows are not enabled.
+- Snippets, Quicklinks, Custom Commands and Calendar events have editors inside the launcher.
+  Existing libraries and settings are retained. Use the creation commands or a row's Edit action.
+
+Oncast's native/legacy deeplinks and Any/Left/Right, Pos/Char shortcuts are retained. Hyper Key
+expansion, UI localization, experimental Dictation and MCP permission-policy changes are not included.
+
 ## Build and run
 
 Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` or set

@@ -64,15 +64,21 @@ struct ExtensionTests {
             case "system.applications":
                 return "[]"
             case "oauth.authorize":
-                let state = arguments[safe: 1]?.stringValue ?? ""
-                return "{\"authorizationCode\":\"auth_code_swift_test\",\"state\":\"\(state)\"}"
+                let url = URLComponents(string: arguments.first?.stringValue ?? "")
+                let state = url?.queryItems?.first { $0.name == "state" }?.value ?? ""
+                return ExtensionRuntime.jsonString(
+                    from: "raycast://oauth?code=auth_code_swift_test&state=\(state)")
             case "oauth.getTokens":
                 let providerId = arguments.first?.stringValue ?? ""
-                return oauthTokens[providerId] ?? ""
+                return ExtensionRuntime.jsonString(from: oauthTokens[providerId])
             case "oauth.setTokens":
                 let providerId = arguments.first?.stringValue ?? ""
                 let tokens = arguments[safe: 1]?.stringValue ?? ""
-                oauthTokens[providerId] = tokens
+                if arguments[safe: 1]?.stringValue == nil {
+                    oauthTokens.removeValue(forKey: providerId)
+                } else {
+                    oauthTokens[providerId] = tokens
+                }
                 return ""
             case "oauth.removeTokens":
                 let providerId = arguments.first?.stringValue ?? ""
@@ -245,7 +251,7 @@ struct ExtensionTests {
             await runtime.start(
                 session: "bundled", code: try String(contentsOf: file, encoding: .utf8), file: file,
                 mode: .view, context: launchContext())
-            await settle(until: { recorder.trees.last?.activeRoot?.string("markdown") == "42" })
+            await settle()
             check(
                 "installed packages resolve in JavaScriptCore",
                 recorder.trees.last?.activeRoot?.string("markdown") == "42")
@@ -1326,7 +1332,7 @@ struct ExtensionTests {
                 screen.items.first?.node.string("title") ?? "nil")
         }
 
-        // OAuth PKCE and TokenSet runtime tests
+        // OAuth PKCE and token-storage runtime tests
         let (oauthRuntime, oauthHost, oauthRecorder) = makeRuntime()
         try? await oauthRuntime.boot(
             config: .current(supportDirectory: FileManager.default.temporaryDirectory))
@@ -1344,11 +1350,11 @@ struct ExtensionTests {
                 clientId: "id123",
               });
               const auth = await client.authorize(req);
-              const tokens = new OAuth.TokenSet({
+              const tokens = {
                 accessToken: "token_" + auth.authorizationCode,
                 refreshToken: "refresh_123",
                 expiresIn: 3600,
-              });
+              };
               await client.setTokens(tokens);
               const read = await client.getTokens();
               await showHUD(read.accessToken);

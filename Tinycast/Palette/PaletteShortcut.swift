@@ -32,6 +32,12 @@ enum PaletteShortcut: Equatable {
     case restart
     /// ⌘N, a new one of whatever the screen holds.
     case newItem
+    /// ⌘E, the row opened in its editor.
+    case edit
+    /// ⌘D.
+    case duplicate
+    /// ⌘F, a file-backed quicklink revealed in Finder.
+    case showInFinder
     /// ⌥⌘,, the screen's own settings; ⌘, alone stays the app's.
     case settings
     /// ⌘J, Quick AI handing its conversation to the AI Chat window.
@@ -56,7 +62,7 @@ enum PaletteShortcut: Equatable {
         if command, shift, matches("t") { return .copyText }
         if command, matches("y") { return .quickLook }
         if control, matches("x") { return shift ? .deleteAll : .delete }
-        if command, shift, matches("f") { return .toggleFavorite }
+        if command, matches("f") { return shift ? .toggleFavorite : .showInFinder }
         if command, shift, matches("h") { return .hideFromSearch }
         if control, shift, matches("q") { return .quit }
         if command, matches("r") { return .restart }
@@ -72,7 +78,7 @@ enum PaletteShortcut: Equatable {
     var requiresExpanded: Bool {
         switch self {
         case .copyFile, .copyName, .copyPath, .copyText, .pasteFile, .quickLook, .toggleFavorite,
-            .hideFromSearch, .quit, .restart:
+            .hideFromSearch, .quit, .restart, .edit, .duplicate, .showInFinder:
             true
         case .commandDelete, .delete, .deleteAll, .pin, .favoriteSlot, .continueInChat, .newItem,
             .settings, .copyCalculation:
@@ -83,7 +89,7 @@ enum PaletteShortcut: Equatable {
     var closesMenu: Bool {
         switch self {
         case .delete, .deleteAll, .copyFile, .copyName, .copyPath, .copyText, .copyCalculation,
-            .quickLook, .toggleFavorite, .hideFromSearch, .newItem, .settings:
+            .quickLook, .toggleFavorite, .hideFromSearch, .newItem, .settings, .edit, .duplicate, .showInFinder:
             true
         case .commandDelete, .pasteFile, .quit, .restart, .pin, .favoriteSlot, .continueInChat:
             false

@@ -281,6 +281,7 @@ run hover-arming-test      Tinycast/Palette/HoverArming.swift \
                            Tinycast/Palette/PaletteMode.swift \
                            Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
                            Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Tinycast/Platform/Images/ImageDerivative.swift \
                            Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
                            Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
                            Tinycast/Features/FileSearch/Model/FileSearchFilter.swift \

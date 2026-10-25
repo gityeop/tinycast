@@ -44,7 +44,7 @@ struct CommandDispatchTests {
             check("\(command) reveals on repeated links", palette.calls == [.show(mode), .show(mode)])
         }
 
-        for command in [CommandID.searchFiles, .searchMenuItems, .switchWindows, .define, .quickAI] {
+        for command in [CommandID.searchFiles, .searchMenuItems, .switchWindows, .define, .quickAI, .searchCustomCommands] {
             feature.calls = []
             core.dictionaryCoordinator.calls = []
             core.quickAICoordinator.calls = []
@@ -203,6 +203,8 @@ final class DispatchProbe {
     func captureWindowLayout() {}
     func createRoom() {}
     func editQuicklink(_ record: Int?) {}
+    func editCustomCommand(_ record: Int?) {}
+    func showCustomCommands(reveal: Bool) { show(reveal: reveal) }
     func importQuicklinks() async {}
     func exportQuicklinks() async {}
     func showBackupSettings() {}
@@ -262,10 +264,10 @@ final class AppCore {
 
 enum AppLauncher {
     static func open(_ url: URL) {}
-    static func launch(_ url: URL) {}
+    static func launch(_ url: URL, allowsRunningApplicationSubstitution: Bool = true) {}
     static func showInFinder(_ url: URL) {}
     static func openSettingsPane(bundleID: String) {}
-    static func quit(bundleID: String, force: Bool = false) -> Bool { false }
+    static func quit(bundleID: String, url: URL? = nil, force: Bool = false) -> Bool { false }
     static func restart(bundleID: String, url: URL) async {}
 }
 

@@ -18,23 +18,7 @@ enum AppActionsMenu {
         favorites: FavoriteActions, onResetRanking: @escaping () -> Void,
         onHideFromSearch: @escaping () -> Void
     ) -> PopoverMenuContent {
-        let primarySymbol =
-            switch app.kind {
-            case .application, .command, .extensionCommand: "list.dash.header.rectangle"
-            default: "list.bullet.rectangle"
-            }
-        var items: [PopoverMenuItem] = [
-            PopoverMenuItem(
-                title: app.kind.descriptor.openVerb, systemImage: primarySymbol,
-                shortcut: "↵"
-            ) { core.launcherCoordinator.launch(app, searchQuery: searchQuery) }
-        ]
-        if app.canRevealInFinder {
-            items.append(
-                PopoverMenuItem(title: "Show in Finder", systemImage: "folder", shortcut: "⌘↵") {
-                    core.launcherCoordinator.showInFinder(app)
-                })
-        }
+        var items = leadingItems(app: app, searchQuery: searchQuery, core: core)
         if core.launcherCoordinator.deeplink(for: app) != nil {
             items.append(
                 PopoverMenuItem(title: "Copy Deeplink", systemImage: "link", shortcut: "⇧⌘C") {
@@ -155,6 +139,14 @@ enum AppActionsMenu {
                 shortcut: "↵"
             ) { core.launcherCoordinator.launch(app, searchQuery: searchQuery) }
         ]
+        if app.kind == .quicklink, let id = Quicklink.id(fromEntryID: app.id),
+            let quicklink = core.quicklinks.quicklink(id: id)
+        {
+            items.append(
+                PopoverMenuItem(title: "Edit Quicklink", systemImage: "pencil", shortcut: "⌘E") {
+                    core.quicklinkCoordinator.editQuicklink(quicklink)
+                })
+        }
         if app.kind == .snippet, let id = StoredSnippet.id(fromEntryID: app.id),
             let record = core.snippetsStore.record(id: id)
         {

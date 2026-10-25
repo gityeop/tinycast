@@ -76,9 +76,13 @@ final class CustomCommandCoordinator {
 
     // MARK: - Library
 
-    func showCustomCommands() {
+    func showCustomCommands(reveal: Bool = false) {
         guard settings.customCommandsEnabled else { return }
-        paletteCoordinator.togglePalette(mode: .customCommands)
+        if reveal {
+            paletteCoordinator.showPalette(mode: .customCommands)
+        } else {
+            paletteCoordinator.togglePalette(mode: .customCommands)
+        }
     }
 
     func editCustomCommand(_ command: CustomCommand?) {

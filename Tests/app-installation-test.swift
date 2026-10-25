@@ -23,8 +23,8 @@ struct AppInstallationTest {
     }
 
     private static func runTests() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-installations-\(UUID())").resolvingSymlinksInPath()
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent("tinycast-installations-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try await testIndex(root)
@@ -93,37 +93,37 @@ struct AppInstallationTest {
             "app-wide settings retain one representative", index.apps.filter { $0.bundleID == id }.count == 1)
         check(
             "scope priority retains the existing representative",
-            index.apps.first { $0.bundleID == id }?.url == stable)
-        check("each row retains its own launch URL", Set(copies.map(\.url)) == [stable, old, backup, preview])
+            index.apps.first { $0.bundleID == id }?.url.standardizedFileURL == stable)
+        check("each row retains its own launch URL", Set(copies.map { $0.url.standardizedFileURL }) == [stable, old, backup, preview])
         check(
             "same-version copies show their distinct folders",
-            copies.first { $0.url == stable }?.subtitle?.contains("Stable") == true)
+            copies.first { $0.url.standardizedFileURL == stable }?.subtitle?.contains("Stable") == true)
         check(
             "the second same-version copy shows its folder",
-            copies.first { $0.url == backup }?.subtitle?.contains("Backup") == true)
-        check("a distinct version needs no path label", copies.first { $0.url == old }?.subtitle == "2025.2")
+            copies.first { $0.url.standardizedFileURL == backup }?.subtitle?.contains("Backup") == true)
+        check("a distinct version needs no path label", copies.first { $0.url.standardizedFileURL == old }?.subtitle == "2025.2")
         check(
-            "preview keeps its own name", copies.first { $0.url == preview }?.name == "Android Studio Preview"
+            "preview keeps its own name", copies.first { $0.url.standardizedFileURL == preview }?.name == "Android Studio Preview"
         )
         check(
             "single installations keep their existing appearance",
-            index.apps.first { $0.url == utility }?.subtitle == nil)
+            index.apps.first { $0.url.standardizedFileURL == utility }?.subtitle == nil)
         check(
             "version metadata is searchable",
-            results("Android Studio 2025.2").entries.contains { $0.url == old })
+            results("Android Studio 2025.2").entries.contains { $0.url.standardizedFileURL == old })
         check(
             "searching Preview selects Preview",
-            results("Android Studio Preview").entries.first?.url == preview)
+            results("Android Studio Preview").entries.first?.url.standardizedFileURL == preview)
         check(
             "settings search does not expose duplicate controls",
             index.matches("Android Studio").filter { $0.bundleID == id }.count == 1)
         check(
             "a version name still finds its app-wide settings",
-            index.matches("Android Studio Preview").first?.url == stable)
+            index.matches("Android Studio Preview").first?.url.standardizedFileURL == stable)
         let empty = results("")
         check(
             "an existing favorite retains the representative",
-            empty.entries.first?.url == stable && empty.favoriteCount == 1)
+            empty.entries.first?.url.standardizedFileURL == stable && empty.favoriteCount == 1)
         check(
             "favoriting the app does not hide its other copies",
             empty.entries.filter { $0.bundleID == id }.count == 4)
@@ -133,7 +133,7 @@ struct AppInstallationTest {
             query: "", visibility: visibility, favorites: FavoritesStore(), hotKeys: hotKeys)
         check(
             "Suggestions contain one representative per app",
-            unpinned.entries.prefix(unpinned.suggestionCount).filter { $0.bundleID == id }.map(\.url) == [
+            unpinned.entries.prefix(unpinned.suggestionCount).filter { $0.bundleID == id }.map { $0.url.standardizedFileURL } == [
                 stable
             ])
         aliases.setAlias("ide", for: id)
@@ -360,7 +360,7 @@ enum CommandCatalog {
     static func command(for entry: AppEntry) -> CommandID? { nil }
 }
 enum HotKeyAction: Hashable, Sendable {
-    case togglePalette, dictation, command(CommandID)
+    case togglePalette, command(CommandID)
     case app(bundleID: String), settingsPane(bundleID: String), quickAction(id: UUID)
     case customCommand(id: UUID), systemAction(id: SystemAction.ID), windowCommand(id: WindowCommand.ID)
     case customWindowSize(id: UUID), windowLayout(id: UUID), windowRoom(id: UUID), quicklink(id: UUID)

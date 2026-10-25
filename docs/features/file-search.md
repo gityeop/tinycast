@@ -33,8 +33,6 @@ design follows [fsearch](https://github.com/noahdunnagan/fsearch).
   so changing `FileSearchIgnoreList.defaults` reaches installs that already ran. Every row can be
   removed, and **Restore Defaults** clears both lists. Scopes are one stored list that `defaultScopes`
   only seeds.
-- **The launcher's Files section is off by default, and off costs nothing.** With it off a keystroke never
-  reaches the index, and `LauncherScreen` reads the switch before the session, so it observes nothing.
 - **A superseded query never publishes.** The session runs one search at a time, keeps only the newest
   pending request, and checks its revision before publishing.
 - **Share is the one system popover, and the palette stays up under it.** `AGENTS.md` keeps Tinycast's
@@ -260,26 +258,8 @@ delay old, since the reset clears its session.
 
 ## In the launcher
 
-**Show in launcher** (`fileSearchShowInLauncher`, under the feature switch) adds a **Files** section to
-root search, between the ranked results and the `Use "…" with` fallbacks, so ↵ on a typed app name never
-opens a file. It lists the top five hits (`FileSearchQuery.launcherLimit`) once the trimmed query has
-three characters (`launcherMinimumLength`), the threshold category search uses. Shorter cancels the
-query and releases its rows.
-
-The launcher borrows this screen's `FileSearchSession` rather than keeping its own. Only one palette
-mode shows at a time, so nothing is held twice. An index swap or a trashed row updates both. And the
-Search Files fallback opens on the request the launcher just answered, with its rows already listed.
-`FileSearchCoordinator.searchFromLauncher` is the one entry point: `RootPaletteView` calls it per
-keystroke and when the launcher becomes the mode, and `applyLauncherFiles` re-runs it when the switch
-changes. `cancel()` returns early on an idle session, so with the section off a keystroke publishes
-nothing.
-
-A Files row is not an `AppEntry`: no `Kind`, no ranking, favorite, alias or Hide from Search. It is
-`LauncherScreen.Row.file`, id-prefixed `file-` because an application's entry id is its bundle path. It
-draws `FileSearchRow` with its location — name, dimmed parent path, then File or Folder — and answers
-the screen's own row actions: ↵ opens, ⌘↵ reveals, the copy, paste and trash chords run
-`FileSearchActionsMenu.perform`, and a row drags out as a copy. Row icons come from the same transient
-fitted cache, purged when the palette hides.
+Search Files opens the dedicated file-search pane. The launcher does not add file rows to root search.
+Its Search Files fallback passes the current query into the pane.
 
 ## Invocation
 

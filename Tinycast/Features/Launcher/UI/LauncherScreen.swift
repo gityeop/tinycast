@@ -296,6 +296,14 @@ struct LauncherScreen: PaletteScreen {
         }
     }
 
+    private func copyQuicklink(at selection: Int) -> Bool {
+        guard let app = entry(at: selection), app.kind == .quicklink,
+            let quicklink = quicklink(for: app)
+        else { return false }
+        core.quicklinkCoordinator.copyQuicklink(id: quicklink.id)
+        return true
+    }
+
     private func copyCalculation(at selection: Int) -> Bool {
         guard case .calc(let result) = row(at: selection), result.isActionable else { return false }
         core.calculatorCoordinator.copyCalculationWithExpression(result)

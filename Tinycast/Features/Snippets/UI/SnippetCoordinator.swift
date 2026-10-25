@@ -359,7 +359,7 @@ final class SnippetCoordinator {
             automaticGeneration: automaticGeneration,
             onDelivered: { [weak self] in
                 guard let self, let confirmation else { return }
-                self.showMessage(confirmation)
+                self.showMessage(confirmation, .success)
             })
     }
 }

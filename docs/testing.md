@@ -545,17 +545,11 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - A missing scope shows the warning triangle without failing the rest of the index
 - The pattern field takes a click; **Add** and Return add `*.log`, which takes effect after the rebuild
 - **Add Folder…** adds a `~/…` pattern, and that folder's files leave the results after the rebuild
-- Built-in ignore rows carry no remove button; user rows do, and a duplicate or blank is refused
+- Built-in and user ignore rows can be removed; Restore Defaults resets both lists
 - Recording a shortcut opens the palette straight into File Search, hidden from the launcher or not
 - Search Files is absent from Settings ▸ Commands, and `Enable Commands` off leaves its shortcut live
 - Export, clear both lists and the shortcut, re-import: all three return, defaults undo not duplicated
-- **Show in launcher** off (the default): a typed filename lists no Files section
-- **Show in launcher** on: three or more characters list up to five files between Results and the
-  fallbacks; two do not. ↵ opens, ⌘↵ reveals, the copy, paste and ⌃X chords act
-  on the row, and a row drags out as a copy
-- Choosing the Search Files fallback right after opens on the same results without a pause
-- With Pop to Root Search delayed, close and reopen before the timeout: the launcher keeps its query
-  and file results. Let the timeout expire, or use Immediately: reopening starts with an empty query
+- Choosing the Search Files fallback opens the dedicated pane with the current query
 
 ### Notes
 

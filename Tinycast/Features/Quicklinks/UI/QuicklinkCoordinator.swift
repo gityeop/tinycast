@@ -230,6 +230,18 @@ final class QuicklinkCoordinator {
         removeQuicklinkReferences(ids: [id], entryIDs: [quicklink.entryID])
     }
 
+    func copyQuicklink(id: UUID) {
+        guard settings.quicklinksEnabled, let quicklink = store.quicklink(id: id),
+            quicklink.isEnabled
+        else { return }
+        paletteCoordinator.hidePalette(restoreFocus: false)
+        guard Paster.copyPlainText(quicklink.link) else {
+            core.showMessage("Couldn’t copy link")
+            return
+        }
+        core.showMessage("Link copied")
+    }
+
     func toggleQuicklinkPinned(id: UUID) {
         do { try store.togglePinned(id: id) } catch { report(error) }
     }
@@ -293,6 +305,21 @@ final class QuicklinkCoordinator {
 
     func editorDidClose(_ editor: QuicklinkEditorSession) {
         if self.editor === editor { self.editor = nil }
+    }
+
+    static func revealablePath(of quicklink: Quicklink) -> String? {
+        guard !QuicklinkDestination.containsPlaceholder(quicklink.link),
+            case .path(let path)? = QuicklinkDestination.detect(quicklink.link)
+        else { return nil }
+        return path
+    }
+
+    @discardableResult
+    func showQuicklinkInFinder(_ quicklink: Quicklink) -> Bool {
+        guard let path = Self.revealablePath(of: quicklink) else { return false }
+        paletteCoordinator.hidePalette(restoreFocus: false)
+        AppLauncher.showInFinder(URL(fileURLWithPath: path))
+        return true
     }
 
     @discardableResult

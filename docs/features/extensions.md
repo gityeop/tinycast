@@ -96,7 +96,7 @@ same arrangement as `EmojiData.generated.swift`: building Tinycast never needs N
 | `src/reconciler.js` | `react-reconciler` host config that commits into a JSON tree |
 | `src/api/components.js` | every `@raycast/api` component |
 | `src/api/system.js` | Clipboard, LocalStorage, Cache, Toast, preferences, environment |
-| `src/api/oauth.js` | `OAuth.PKCEClient`, `OAuth.TokenSet`, redirect url builders |
+| `src/api/oauth.js` | `OAuth.PKCEClient`, token sets and redirect URL builders |
 | `src/api/enums.generated.js` | Icon / Color / Toast.Style / … extracted from the real `@raycast/api` types |
 | `src/node-shims.js` | `path`, `fs`, `os`, `child_process`, `crypto`, `zlib`, `util`, `events`, `buffer`, `punycode`, … |
 | `src/websocket.js` | the `WebSocket` global, and the raw socket a bundled `ws` attaches to |
@@ -678,9 +678,9 @@ would launch Raycast itself.
 runs on top of it unchanged. The browser step is `ExtensionSignInSession`: providers have Raycast's
 fixed redirect URIs registered, which all end on `raycast://oauth` or `com.raycast:/oauth`, and
 `ASWebAuthenticationSession` intercepts that scheme itself, so an installed Raycast cannot take the
-redirect. Raycast's web redirect page drops `state`, so only a returned `state` is checked. Each
-provider's token set lives in the extension's data file, beside its preferences, keyed by
-`providerId`. Only a command the user opened can start a sign-in; a background refresh fails until
+redirect. The runtime requires a returned state to match the authorization request. Each
+provider's token set stays in Oncast's Keychain store, keyed by
+extension name and `providerId`. Only a command the user opened can start a sign-in; a background refresh fails until
 then. While the browser is up the palette hides, but Pop to Root Search holds off, because resetting
 would stop the command and cancel the sign-in. Summoning the palette meanwhile returns to the waiting
 command, and the palette comes back on its own when the redirect lands.
@@ -872,7 +872,8 @@ never shares with an installed copy.
 | What                                               | Where                                                 | Gone on uninstall |
 | -------------------------------------------------- | ----------------------------------------------------- | ----------------- |
 | The extension                                      | `extensions/<name>/`                                  | yes               |
-| `LocalStorage`, `Cache`, preferences, OAuth tokens | `extension-data/<safe name>.json`                     | yes               |
+| `LocalStorage`, `Cache`, preferences                | `extension-data/<safe name>.json`                     | yes               |
+| OAuth token sets                                   | Oncast Keychain store, by extension and provider      | yes               |
 | Command subtitle, refresh state                    | `extension-commands.json`                             | yes               |
 | Installed store version                            | `extension-versions.json`                             | yes               |
 | `environment.supportPath`                          | `extension-support/<safe name>/`                      | yes               |

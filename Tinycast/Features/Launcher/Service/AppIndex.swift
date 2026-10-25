@@ -446,7 +446,7 @@ final class AppIndex {
 
     /// Replaces the command slice without rescanning, so Settings edits land at once.
     func setCustomCommands(_ commands: [CustomCommand]) {
-        let entries = commands.filter(\.isEnabled).map(AppEntry.init)
+        let entries = commands.filter { $0.isEnabled && $0.showsInRootSearch }.map(AppEntry.init)
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         guard entries != customCommandEntries else { return }
         customCommandEntries = entries
@@ -707,7 +707,7 @@ final class AppIndex {
 
     private func matchingEntries(_ query: String, limit: Int = 200) -> [AppEntry] {
         let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return apps }
+        guard !q.isEmpty else { return searchEntries }
         return matchMemo.value(for: matchKey(q)) {
             guard let kind = AppEntry.Kind.named(by: q) else { return rank(q, limit: limit) }
             return categoryListing(kind, query: q)
@@ -716,7 +716,7 @@ final class AppIndex {
 
     /// Slice order is section order, so filtering keeps sections and selection aligned.
     private func categoryListing(_ kind: AppEntry.Kind, query: String) -> [AppEntry] {
-        let listed = apps.filter {
+        let listed = searchEntries.filter {
             $0.kind == kind || FuzzyMatch.normalized($0.name) == FuzzyMatch.normalized(query)
         }
         return byUsage(listed, usage: ranking.snapshot())

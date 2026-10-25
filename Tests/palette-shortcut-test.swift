@@ -70,7 +70,7 @@ struct PaletteShortcutTests {
         expect(
             resolve("f", command: true, shift: true, control: true), .toggleFavorite,
             "an extra Control still reads ⇧⌘F")
-        expect(resolve("f", command: true), nil, "⌘F is not the favorite chord")
+        expect(resolve("f", command: true), .showInFinder, "⌘F reveals a file-backed quicklink")
         expect(resolve("h", command: true, shift: true), .hideFromSearch, "⇧⌘H hides the row")
         expect(resolve("h", command: true), nil, "⌘H is not the hide chord")
         expect(resolve("q", shift: true, control: true), .quit, "⌃⇧Q quits the app")
