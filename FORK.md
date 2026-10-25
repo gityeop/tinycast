@@ -95,9 +95,11 @@ spctl --assess --type execute --verbose=2 'build/release/Build/Products/Release/
 The app is named **Oncast**, bundle identifier `com.gityeop.tinycast`. Renaming the app keeps
 that identifier and accepts existing `tinycast://` URLs, so settings and Leader Key
 shortcuts continue to work without migration. New copied links use `oncast://`. It keeps its own
-preferences and `~/Library/Application Support/com.gityeop.tinycast` data. It uses the development
-update channel, so the upstream updater cannot replace the fork with a release missing these changes.
-The release-feed repository is `gityeop/tinycast`; automatic updates remain disabled for this app.
+preferences and `~/Library/Application Support/com.gityeop.tinycast` data. It uses the stable update
+channel and reads releases only from `gityeop/tinycast`. Tags use `oncast-vMAJOR.MINOR.PATCH`;
+`AppVersion` normalizes them to the version stored in the app. Updates are checked daily and through
+Check for Updates, and installed only after the user chooses Update Now. Downloaded apps must match
+Oncast's bundle ID, version and Developer ID team (`79Q5RV23F9`).
 Copy existing settings and extensions into those locations once if you want to reuse them.
 
 Launching a test URL explicitly avoids relying on another app's scheme registration:

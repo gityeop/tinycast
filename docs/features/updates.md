@@ -1,7 +1,9 @@
 # Updates
 
-The Oncast fork uses `gityeop/tinycast` as its release-feed repository. Its
-`com.gityeop.tinycast` bundle is a development channel, so automatic updates remain disabled.
+Oncast uses `gityeop/tinycast` as its release-feed repository. Its existing `com.gityeop.tinycast`
+bundle is a stable channel. It recognizes `oncast-vMAJOR.MINOR.PATCH` tags, checks daily and supports
+Check for Updates. Installation starts when the user chooses Update Now. The first version with
+this connection is 0.1.1; a 0.1.0 installation needs that update installed manually once.
 The upstream channel and Homebrew notes below describe Tinycast.
 
 
@@ -27,13 +29,10 @@ release feed the website already reads is the feed the app reads.
   that flag for sandboxed downloaders and for apps that opt in with `LSFileQuarantineEnabled`, and
   Tinycast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
   `xattr` tool, and an app that still carries the flag is refused rather than installed.
-- **The signature is the only integrity guarantee.** A downloaded bundle is trusted when its seal
-  validates, nested helper included, *and* it either satisfies the Developer ID requirement pinned in
-  `BundleSignature` or carries the byte-identical leaf certificate the running app does. The
-  requirement names the team, so a certificate renewal strands nobody; the leaf match is the path a
-  copy installed before the Developer ID switch has, and it goes away once none is left. `notarized`
-  is deliberately not in the requirement — it resolves the ticket through `syspolicyd` or the
-  network, so an offline Mac would refuse a bundle the chain already proves is ours.
+- **The signature proves the update belongs to Oncast.** Its seal and nested code must validate, and
+  its Developer ID Application certificate must chain to Apple and name team `79Q5RV23F9`.
+  The team is pinned rather than the leaf certificate, so certificate renewal keeps working.
+  `notarized` is not part of this requirement, because ticket resolution can require the network.
 - **A build only ever updates within its own channel.** The channels are separate bundle ids installed
   side by side; crossing would mean installing a different app. `com.tinycast.app.dev` never updates
   at all, and does not advertise the command.
@@ -73,11 +72,13 @@ release feed the website already reads is the feed the app reads.
 
 | Bundle id | Channel | Takes |
 | --- | --- | --- |
+| `com.gityeop.tinycast` | `.stable` | Oncast releases |
 | `com.tinycast.app` | `.stable` | releases |
 | `com.tinycast.app.beta` | `.beta` | prereleases |
 | anything else | `.development` | nothing |
 
-`AppVersion` parses `MAJOR.MINOR.PATCH` and `MAJOR.MINOR.PATCH-beta.N` with semver precedence: a
+`AppVersion` parses `MAJOR.MINOR.PATCH`, `vMAJOR.MINOR.PATCH` and
+`oncast-vMAJOR.MINOR.PATCH`, optionally followed by `-beta.N`, with semver precedence: a
 prerelease sorts below the release it leads to, and `beta.10` above `beta.9`. Everything else parses
 to nil, so an off-shape tag can never be offered as an update. A release whose tag disagrees with
 its `prerelease` flag is treated as mis-published and skipped.
@@ -113,7 +114,7 @@ One route, whatever the install came from:
    for its channel, so it is `Tinycast Beta.app` on beta.
 3. Check quarantine natively; clear it if somehow present, and refuse the update if it survives.
 4. Verify the bundle id, the version, and that the code signature is valid and proves the bundle is
-   ours — by the pinned Developer ID requirement, or by the running app's own leaf certificate.
+   ours — by the pinned Oncast Developer ID requirement.
 5. `FileManager.replaceItemAt`. The staging folder is on the same volume as `/Applications`, which is
    what lets this be atomic. A non-writable `/Applications` is reported, not worked around; there is
    no privileged helper.

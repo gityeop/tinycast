@@ -22,6 +22,7 @@ struct UpdatesTests {
         roundTripsVersionsThroughJSON()
         derivesChannels()
         picksNewestForChannel()
+        recognizesOncastReleases()
         picksTheZipThisMacCanRun()
         rejectsUnusableFeeds()
         offersOnlyWhatIsWorthInstalling()
@@ -40,6 +41,11 @@ struct UpdatesTests {
     static func parsesVersions() {
         expect(AppVersion("0.2.1")?.description == "0.2.1", "parses a plain triple")
         expect(AppVersion("v0.2.1")?.description == "0.2.1", "strips the tag's leading v")
+        expect(AppVersion("oncast-v0.1.0")?.description == "0.1.0", "reads the published Oncast tag")
+        expect(AppVersion("oncast-v0.1.1") == AppVersion("0.1.1"), "normalizes Oncast tags for bundle checks")
+        expect(AppVersion("oncast-v0.1.1-beta.2")?.beta == 2, "reads an Oncast prerelease")
+        expect(AppVersion("oncast-0.1.1") == nil, "requires the published Oncast tag prefix")
+        expect(AppVersion("other-v0.1.1") == nil, "rejects unrelated tag prefixes")
         expect(AppVersion(" 0.2.1 ")?.description == "0.2.1", "tolerates surrounding whitespace")
         expect(AppVersion("0.2.0-beta.42")?.beta == 42, "reads the beta counter")
         expect(AppVersion("0.2.0-beta.42")?.description == "0.2.0-beta.42", "round-trips a beta")
@@ -103,10 +109,15 @@ struct UpdatesTests {
         let stable = ReleaseChannel(bundleID: "com.tinycast.app")
         let beta = ReleaseChannel(bundleID: "com.tinycast.app.beta")
         let dev = ReleaseChannel(bundleID: "com.tinycast.app.dev")
+        let oncast = ReleaseChannel(bundleID: "com.gityeop.tinycast")
 
         expect(stable == .stable, "the stable bundle id is the stable channel")
         expect(beta == .beta, "the beta bundle id is the beta channel")
         expect(dev == .development, "the dev bundle id is a local build")
+        expect(oncast == .stable && oncast.updatesItself, "the installed Oncast bundle updates itself")
+        expect(
+            ReleaseChannel(bundleID: "com.gityeop.oncast.oct26qa") == .development,
+            "an isolated QA bundle still has no update channel")
         expect(ReleaseChannel(bundleID: nil) == .development, "a missing bundle id never updates")
 
         expect(stable.updatesItself && beta.updatesItself, "both shipped channels update")
@@ -216,6 +227,27 @@ struct UpdatesTests {
             "one bad entry does not discard the whole feed")
     }
 
+    static func recognizesOncastReleases() {
+        let body = feed(
+            entry(tag: "oncast-v0.1.0", prerelease: false, assets: ["Oncast-0.1.0-arm64.zip"]),
+            entry(tag: "oncast-v0.1.1", prerelease: false, assets: ["Oncast-0.1.1-arm64.zip"]),
+            entry(tag: "oncast-v0.2.0-beta.1", prerelease: true),
+            entry(tag: "oncast-v0.2.0", prerelease: false, draft: true))
+        let release = ReleaseFeed.newest(
+            from: body, channel: ReleaseChannel(bundleID: "com.gityeop.tinycast"),
+            architecture: .appleSilicon)
+        expect(release?.tag == "oncast-v0.1.1", "Oncast selects its latest published stable release")
+        expect(
+            release?.assetURL.lastPathComponent == "Oncast-0.1.1-arm64.zip",
+            "Oncast selects the downloadable update archive")
+        expect(
+            ReleaseFeed.offer(release, running: AppVersion("0.1.0")!, skipped: nil) != nil,
+            "the current Oncast version is offered the update")
+        expect(
+            ReleaseFeed.offer(release, running: AppVersion("0.1.1")!, skipped: nil) == nil,
+            "the installed release reports up to date")
+    }
+
     /// Stable carries a thin arm64 zip and a universal one; each Mac gets what it runs.
     static func picksTheZipThisMacCanRun() {
         let both = feed(
@@ -308,6 +340,12 @@ struct UpdatesTests {
         expect(
             BundleSignature.developerID.contains("field.1.2.840.113635.100.6.1.13"),
             "the requirement demands a Developer ID Application certificate specifically")
+        expect(
+            BundleSignature.developerID.contains("79Q5RV23F9"),
+            "updates are signed by Oncast's developer team")
+        expect(
+            !BundleSignature.developerID.contains("SPBUD83MLU"),
+            "the original Tinycast developer team is not trusted for Oncast updates")
     }
 
     static func keepsOnlyTheChangelog() {

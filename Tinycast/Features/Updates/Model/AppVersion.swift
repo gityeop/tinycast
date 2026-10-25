@@ -10,8 +10,12 @@ struct AppVersion: Comparable, Hashable, Sendable, CustomStringConvertible {
 
     init?(_ text: String) {
         var body = Substring(text.trimmingCharacters(in: .whitespacesAndNewlines))
-        // Release tags carry a leading `v`; `CFBundleShortVersionString` never does.
-        if body.first == "v" { body = body.dropFirst() }
+        // GitHub tags carry a prefix; CFBundleShortVersionString stores only the version.
+        if body.hasPrefix("oncast-v") {
+            body = body.dropFirst("oncast-v".count)
+        } else if body.first == "v" {
+            body = body.dropFirst()
+        }
 
         let halves = body.split(separator: "-", maxSplits: 1, omittingEmptySubsequences: false)
         let numbers = halves[0].split(separator: ".", omittingEmptySubsequences: false)

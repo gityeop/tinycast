@@ -1,6 +1,8 @@
 # Release
 
 Oncast's Developer ID build and notarization procedure is in [FORK.md](../FORK.md).
+Oncast releases use `oncast-vMAJOR.MINOR.PATCH` tags on `gityeop/tinycast`, with matching app versions
+and Developer ID signed DMG and ZIP assets. ZIPs power the in-app updater starting in 0.1.1.
 The local DMG command below packages Oncast; the remaining release channels describe upstream Tinycast.
 
 How a build reaches a user. The local development loop is in [development.md](development.md);
