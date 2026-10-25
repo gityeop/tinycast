@@ -64,6 +64,14 @@ struct CommandDispatchTests {
             coordinator.runCommand(command, reveal: true)
             check("\(command) forwards reveal", probe.calls == ["show:false", "show:true"])
         }
+        palette.isVisible = true
+        for command in [CommandID.createSnippet, .createQuicklink, .createCustomCommand] {
+            palette.hideCalls = 0
+            feature.calls = []
+            coordinator.runCommand(command, reveal: true)
+            check("\(command) opens its inline editor without hiding the launcher",
+                  palette.hideCalls == 0 && feature.calls == ["edit"])
+        }
         core.aiChatCoordinator.calls = []
         coordinator.runCommand(.aiChat)
         coordinator.runCommand(.aiChat)
@@ -162,9 +170,10 @@ final class PaletteCoordinator {
     enum Call: Equatable { case show(PaletteMode), toggle(PaletteMode) }
     var calls: [Call] = []
     var isVisible = false
+    var hideCalls = 0
     func showPalette(mode: PaletteMode) { calls.append(.show(mode)) }
     func togglePalette(mode: PaletteMode) { calls.append(.toggle(mode)) }
-    func hidePalette(restoreFocus: Bool) {}
+    func hidePalette(restoreFocus: Bool) { hideCalls += 1 }
 }
 
 @MainActor
@@ -198,12 +207,12 @@ final class DispatchProbe {
     func createEvent() {}
     func createNote() {}
     func searchNotes() {}
-    func editSnippet(_ record: Int?) {}
+    func editSnippet(_ record: Int?) { calls.append("edit") }
     func editWindowLayout(_ record: Int?) {}
     func captureWindowLayout() {}
     func createRoom() {}
-    func editQuicklink(_ record: Int?) {}
-    func editCustomCommand(_ record: Int?) {}
+    func editQuicklink(_ record: Int?) { calls.append("edit") }
+    func editCustomCommand(_ record: Int?) { calls.append("edit") }
     func showCustomCommands(reveal: Bool) { show(reveal: reveal) }
     func importQuicklinks() async {}
     func exportQuicklinks() async {}

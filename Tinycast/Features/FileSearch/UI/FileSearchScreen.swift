@@ -98,7 +98,7 @@ struct FileSearchScreen: PaletteScreen {
             EmptyResults(
                 text: "Full Disk Access required",
                 detail: "File Search indexes your whole disk. Press ↵ to open Privacy & Security, "
-                    + "then turn on Tinycast under Full Disk Access.",
+                    + "then turn on Oncast under Full Disk Access.",
                 systemImage: "lock.shield")
         } else if !indexer.hasIndex, case .building(let items) = indexer.status {
             EmptyResults(

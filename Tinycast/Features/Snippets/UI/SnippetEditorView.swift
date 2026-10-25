@@ -58,7 +58,7 @@ struct SnippetEditorView: View {
                         - metrics.typography.textNSFont(.callout).boundingRectForFont.height,
                     label: "Snippet template", moveFocus: editor.advanceFocus
                 )
-                .accessibilityHint("Enter the text Tinycast expands.")
+                .accessibilityHint("Enter the text Oncast expands.")
                 HStack {
                     placeholderMenu
                     Spacer()

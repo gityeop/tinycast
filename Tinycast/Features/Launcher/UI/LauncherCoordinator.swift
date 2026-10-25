@@ -232,7 +232,6 @@ final class LauncherCoordinator {
         case .searchSnippets:
             snippetCoordinator.showSnippets(reveal: reveal)
         case .createSnippet:
-            dismissPalette()
             snippetCoordinator.editSnippet(nil)
         case .createWindowLayout:
             dismissPalette()
@@ -245,7 +244,6 @@ final class LauncherCoordinator {
         case .createRoom:
             core.roomCoordinator.createRoom()
         case .createQuicklink:
-            dismissPalette()
             quicklinkCoordinator.editQuicklink(nil)
         case .createCustomCommand:
             customCommandCoordinator.editCustomCommand(nil)
