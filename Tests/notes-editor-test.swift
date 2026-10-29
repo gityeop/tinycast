@@ -13,6 +13,8 @@ struct NotesEditorTests {
         testLiteralEditingAndNativeCommands(rendersMarkdown: false)
         testLiteralEditingAndNativeCommands(rendersMarkdown: true)
         testNewlineScrolling()
+        testUndoKeyboardShortcuts(rendersMarkdown: false)
+        testUndoKeyboardShortcuts(rendersMarkdown: true)
         testUndoIsolation()
         testQuickActionReplacement()
         testCharacterCountReports()
@@ -114,6 +116,40 @@ struct NotesEditorTests {
                 }
             }
         }
+    }
+
+    private static func testUndoKeyboardShortcuts(rendersMarkdown: Bool) {
+        let source = "original"
+        var changes: [String] = []
+        let editor = makeEditor(
+            input: NoteEditorInput(id: NoteID(rawValue: "Undo keys.md"), source: source, epoch: 1),
+            rendersMarkdown: rendersMarkdown, onSourceChange: { changes.append($0) })
+        let textView = editor.textView
+        guard let scrollView = textView.enclosingScrollView else {
+            check("the undo shortcut editor has a scroll view", false)
+            return
+        }
+        let panel = NotesPanel(
+            content: scrollView, size: scrollView.frame.size,
+            styleMask: [.titled, .closable], acceptsMain: true)
+        panel.makeFirstResponder(textView)
+        textView.setSelectedRange(NSRange(location: source.count, length: 0))
+        textView.insertText(" edit", replacementRange: textView.selectedRange())
+        check("typing creates an undo step", editor.coordinator.editorUndoManager.canUndo)
+
+        check(
+            "Cmd+Z is handled with rendering \(rendersMarkdown)",
+            panel.performKeyEquivalent(with: keyDown("z", keyCode: kVK_ANSI_Z, in: panel)))
+        check("Cmd+Z restores the source", textView.string == source)
+        check("Cmd+Z publishes the restored source", changes.last == source)
+
+        check(
+            "Cmd+Shift+Z is handled with rendering \(rendersMarkdown)",
+            panel.performKeyEquivalent(with: keyDown(
+                "Z", keyCode: kVK_ANSI_Z, modifiers: [.command, .shift], in: panel)))
+        check(
+            "Cmd+Shift+Z restores the edit", textView.string == source + " edit")
+        check("Cmd+Shift+Z publishes the restored edit", changes.last == source + " edit")
     }
 
     private static func testQuickActionReplacement() {

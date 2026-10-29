@@ -526,6 +526,7 @@ run notes-editor-test      Tinycast/Platform/Signposts.swift \
                            Tinycast/Features/Notes/UI/NoteLayoutFragmentProvider.swift \
                            Tinycast/Features/Notes/UI/NoteTextViewEditing.swift \
                            Tinycast/Features/Notes/UI/NoteTextView.swift \
+                           Tinycast/Features/Notes/UI/NotesPanel.swift \
                            Tinycast/Features/Notes/UI/NoteEditorView.swift
 run -O index notes-editor-performance \
                            Tinycast/Platform/Signposts.swift \

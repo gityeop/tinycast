@@ -113,6 +113,21 @@ final class NoteTextView: NSTextView, InjectableTextView {
 
     /// A formatting chord is always ours while rendering, even when it has nothing to do.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let modifiers = event.modifierFlags.intersection([.command, .shift, .option, .control])
+        if window?.firstResponder === self, isEditable, !hasMarkedText(),
+            event.charactersIgnoringModifiers?.lowercased() == "z",
+            modifiers == .command || modifiers == [.command, .shift]
+        {
+            guard !event.isARepeat else { return true }
+            breakUndoCoalescing()
+            if modifiers == .command {
+                undoManager?.undo()
+            } else {
+                undoManager?.redo()
+            }
+            didChangeText()
+            return true
+        }
         guard rendersMarkdown, window?.firstResponder === self, let action = Self.chord(for: event) else {
             return super.performKeyEquivalent(with: event)
         }

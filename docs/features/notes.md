@@ -238,6 +238,9 @@ reaches autosave.
 Digits match by key code. The text view sees these chords before `NotesPanel` claims its own, and none
 collide. In a note, ⌘E replaces AppKit's Use Selection for Find.
 
+Command-Z and Shift-Command-Z go directly to the editor's undo manager, including with rendering off,
+because the non-activating panel cannot rely on the frontmost application's Undo menu.
+
 AppKit still owns typing, selection, Cut, Copy, Paste, Select All, Find, marked text, emoji, combining
 characters and undo grouping. Copy yields raw Markdown and VoiceOver reads the source. Changing the note
 identity or editor epoch reinstalls and restyles the string and clears the previous document's undo
@@ -313,7 +316,8 @@ autosave, external reloads, draft preservation, empty collections, switcher inte
 cancellation, plus the Markdown parser, every edit plan, the formatting each selection reports and the
 reveal policy.
 
-`Tests/notes-editor-test.swift` uses real TextKit 2 and AppKit undo objects. It runs the native
+`Tests/notes-editor-test.swift` uses real TextKit 2 and AppKit undo objects, including Undo and Redo
+keyboard events through the non-activating `NotesPanel` with rendering on and off. It runs the native
 Cut/Copy/Paste, the native find bar, Unicode and marked-text cases with rendering off and on, and covers undo isolation, an
 exact source after styling, hidden and revealed markers, restyling after edits and after undo, block
 decorations and layout fragments, list keys, chords, the task rule, checkbox toggles, link schemes,
