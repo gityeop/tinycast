@@ -5,6 +5,13 @@ Oncast releases use `oncast-vMAJOR.MINOR.PATCH` tags on `gityeop/tinycast`, with
 and Developer ID signed DMG and ZIP assets. ZIPs power the in-app updater starting in 0.1.1.
 The local DMG command below packages Oncast; the remaining release channels describe upstream Tinycast.
 
+The 0.1.4 release also ships the separately installed API Keys extension as
+`Oncast-API-Keys-1.1.0-arm64.tar.gz`. Its signed and notarized `OncastKeychain.app` stores keys in the
+user's protected macOS Keychain; no user keys or migration inputs belong in this archive. Extract it
+and choose the `oncast-api-keys` folder in Settings → Extensions → Install New → Add from folder.
+It requires Oncast 0.1.4's `@oncast/api.withSystemDialog` API. Keep extension archives in `.tar.gz`
+format: the app updater considers `.zip` assets to be app updates.
+
 How a build reaches a user. The local development loop is in [development.md](development.md);
 the signing identity itself is in [signing.md](signing.md).
 
