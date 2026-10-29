@@ -22,6 +22,9 @@ The command palette is a borderless floating `NSPanel` hosting SwiftUI; see
   flipping a branch around it tears its field editor down. The header is simply left empty.
 - **Focus restoration is load-bearing.** Paste targets the recorded `previousApp` and requires the
   Accessibility permission (`Permissions.ensureAccessibility()`).
+- **An extension's system authentication keeps its screen.** While `withSystemDialog` is pending,
+  focus loss does not hide the palette or reset the command. Explicit dismissal still closes it.
+  When authentication ends, the existing panel takes keyboard focus without a new summon.
 - **Input-source switching is a palette session.** The source active at summon time is captured before
   the panel becomes key, the configured source is applied through `PalettePanel.fieldEditorContext`, and
   the captured source is restored on hide and on termination — but only when the palette is still on the

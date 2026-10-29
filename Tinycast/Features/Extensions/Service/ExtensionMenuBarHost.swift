@@ -31,6 +31,7 @@ final class ExtensionMenuBarHost: ExtensionHostContext {
     func stop() { oauth.cancel() }
     func enableInteraction() { isInteractive = true }
     func closeMainWindow(clearRootSearch: Bool) {}
+    func focusMainWindow() {}
     func reopenPalette() { coordinator?.reopenPalette(hasRunningCommand: false) }
     func popToRoot() {}
     func clearSearchBar() {}

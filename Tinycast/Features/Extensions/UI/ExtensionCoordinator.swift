@@ -256,6 +256,10 @@ final class ExtensionCoordinator {
         paletteCoordinator.hidePalette(restoreFocus: false)
     }
 
+    func focusMainWindow() {
+        paletteCoordinator.focusPalette()
+    }
+
     func reopenPalette(hasRunningCommand: Bool) {
         paletteCoordinator.showPalette(
             mode: hasRunningCommand ? .extensionCommand : .launcher, restoreAnyMode: true)

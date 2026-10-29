@@ -15,6 +15,7 @@ protocol ExtensionHostContext: AnyObject {
     var applicationURLs: [URL] { get }
 
     func closeMainWindow(clearRootSearch: Bool)
+    func focusMainWindow()
     /// Bring the palette back after a command hid it — what `raycast://` means to an extension.
     func reopenPalette()
     func popToRoot()
@@ -130,6 +131,8 @@ final class ExtensionHostBridge: ExtensionHostAPI {
     private let fetcher: ExtensionFetcher
     private let sockets = ExtensionWebSocketBridge()
     private var reportedSocketFailures: Set<String> = []
+    private var systemDialogDepth = 0
+    var isPresentingSystemDialog: Bool { systemDialogDepth > 0 }
     /// One browser sign-in at a time; the palette keeps its command alive while it is out.
     private(set) var isSigningIn = false
 
@@ -205,6 +208,7 @@ final class ExtensionHostBridge: ExtensionHostAPI {
     func sessionEnded() {
         sockets.closeAll()
         reportedSocketFailures.removeAll()
+        systemDialogDepth = 0
     }
 
     // MARK: - Clipboard
@@ -353,6 +357,11 @@ final class ExtensionHostBridge: ExtensionHostAPI {
     private func window(method: String, arguments: [RenderValue]) -> Any? {
         guard context?.activeLaunchType != .background else { return nil }
         switch method {
+        case "beginSystemDialog":
+            systemDialogDepth += 1
+        case "endSystemDialog":
+            systemDialogDepth -= 1
+            if systemDialogDepth == 0 { context?.focusMainWindow() }
         case "close":
             let options = arguments.first?.objectValue ?? [:]
             context?.closeMainWindow(clearRootSearch: options["clearRootSearch"]?.boolValue ?? false)

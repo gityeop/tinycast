@@ -869,6 +869,46 @@ export default function Command() {
 // ─── Runner ─────────────────────────────────────────────────────────
 
 export async function runFixtures() {
+  const dialogEvents = [];
+  await run("System dialog retains the window until the operation succeeds", `
+    import { withSystemDialog } from "@oncast/api";
+    import { showHUD } from "@raycast/api";
+    export default async function Command() {
+      const value = await withSystemDialog(async () => {
+        await showHUD("authenticate");
+        return 42;
+      });
+      await showHUD(String(value));
+    }
+  `, "no-view", async (harness) => {
+    check("dialog scope covers the native operation and returns its value",
+      dialogEvents.join(",") === "begin,authenticate,end,42", dialogEvents.join(","));
+    check("successful system dialog finishes", harness.state.finished);
+  }, { stubs: {
+    "window.beginSystemDialog": () => dialogEvents.push("begin"),
+    "window.endSystemDialog": () => dialogEvents.push("end"),
+    "feedback.showHUD": ([title]) => dialogEvents.push(title),
+  } });
+  const canceledDialogEvents = [];
+  await run("Canceled system dialog releases window retention before reporting the error", `
+    import { withSystemDialog } from "@oncast/api";
+    import { showHUD } from "@raycast/api";
+    export default async function Command() {
+      try {
+        await withSystemDialog(async () => { throw new Error("canceled"); });
+      } catch (error) {
+        await showHUD(error.message);
+      }
+    }
+  `, "no-view", async (harness) => {
+    check("canceled dialog releases the scope",
+      canceledDialogEvents.join(",") === "begin,end,canceled", canceledDialogEvents.join(","));
+    check("canceled dialog does not fail its command", harness.state.failures.length === 0);
+  }, { stubs: {
+    "window.beginSystemDialog": () => canceledDialogEvents.push("begin"),
+    "window.endSystemDialog": () => canceledDialogEvents.push("end"),
+    "feedback.showHUD": ([title]) => canceledDialogEvents.push(title),
+  } });
   await run("List with sections, actions and a dropdown", listSource, "view", async (harness) => {
     const tree = harness.state.trees.at(-1);
     const dump = tree ? describeTree(tree) : "";

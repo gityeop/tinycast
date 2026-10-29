@@ -14,6 +14,7 @@ import { resolveComponent } from "./async-component.js";
 import { NavigationRoot, setFieldCommandHandler } from "./api/components.js";
 import { Surface } from "./reconciler.js";
 import { raycastApi } from "./api/index.js";
+import { withSystemDialog } from "./api/oncast.js";
 import { configureSystem, runToastAction } from "./api/system.js";
 import { WebSocket } from "./websocket.js";
 
@@ -33,6 +34,7 @@ defineModule("react", reactModule);
 defineModule("react/jsx-runtime", jsxModule);
 defineModule("react/jsx-dev-runtime", jsxModule);
 defineModule("@raycast/api", raycastApi);
+defineModule("@oncast/api", { withSystemDialog });
 // react-dom only appears in bundles defensively; make the import resolve and the calls explain.
 defineModule("react-dom", {
   render: () => {

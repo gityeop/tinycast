@@ -47,6 +47,12 @@ final class PaletteWindowController: NSObject, NSWindowDelegate {
 
     var isVisible: Bool { panel?.isVisible ?? false }
 
+    func focus() {
+        guard let panel, panel.isVisible else { return }
+        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
+    }
+
     /// Where the panel sits in screen coordinates, so an overlay drawn under it can avoid it.
     var visibleFrame: CGRect? { panel.flatMap { $0.isVisible ? $0.frame : nil } }
 
@@ -236,7 +242,9 @@ final class PaletteWindowController: NSObject, NSWindowDelegate {
 
     /// Not for a dialog or a modal: hiding tears down a running command.
     func windowDidResignKey(_ notification: Notification) {
-        guard isVisible, !core.isShowingDialog else { return }
+        guard isVisible, !core.isShowingDialog, !core.extensions.isPresentingSystemDialog else {
+            return
+        }
         if core.palette.menuOpen { return }
         // A file panel sets its own level under ours, so sink rather than dismiss.
         if NSApp.modalWindow != nil {

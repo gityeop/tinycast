@@ -25,6 +25,7 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
     private(set) var running: ExtensionCommandRef?
     /// The command waits on a browser sign-in; resetting the palette now would end it.
     var isSigningIn: Bool { bridge.isSigningIn }
+    var isPresentingSystemDialog: Bool { bridge.isPresentingSystemDialog }
     /// Toasts the running command asked for, newest last.
     private(set) var toasts: [ExtensionToast] = []
     /// Depth of the extension's own navigation stack; >1 means Escape should pop rather than close.
@@ -899,6 +900,10 @@ final class ExtensionManager: ExtensionRuntimeDelegate, ExtensionHostContext {
 
     func closeMainWindow(clearRootSearch: Bool) {
         coordinator?.closeMainWindow()
+    }
+
+    func focusMainWindow() {
+        coordinator?.focusMainWindow()
     }
 
     func reopenPalette() {

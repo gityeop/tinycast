@@ -85,6 +85,14 @@ timers, `fetch`, `URL`, `URLSearchParams`, `Blob`/`File`/`FormData`, `DOMExcepti
 
 ## The JS runtime
 
+Oncast extensions can import `withSystemDialog` from `@oncast/api` and await a native
+authentication operation inside its callback. The host retains the visible palette across
+focus loss until that callback settles, including a rejection. The outermost callback's
+completion restores keyboard focus to the still-visible palette without resetting its search.
+Explicit close and Escape
+still end the command, and session teardown clears the retention. Other extensions keep
+their usual close-on-blur behavior.
+
 `Tinycast/Resources/RaycastRuntime.generated.js` (~200 KB minified) is **generated and committed**, the
 same arrangement as `EmojiData.generated.swift`: building Tinycast never needs Node. Sources live in
 [`Scripts/raycast-runtime/`](../../Scripts/raycast-runtime):
