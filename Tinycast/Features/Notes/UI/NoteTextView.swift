@@ -70,8 +70,18 @@ final class NoteTextView: NSTextView, InjectableTextView {
     // MARK: - Keys
 
     override func insertNewline(_ sender: Any?) {
+        defer {
+            layoutSubtreeIfNeeded()
+            scrollRangeToVisible(selectedRange())
+        }
         guard !perform(.newline) else { return }
         super.insertNewline(sender)
+    }
+
+    override func insertLineBreak(_ sender: Any?) {
+        super.insertLineBreak(sender)
+        layoutSubtreeIfNeeded()
+        scrollRangeToVisible(selectedRange())
     }
 
     override func deleteBackward(_ sender: Any?) {

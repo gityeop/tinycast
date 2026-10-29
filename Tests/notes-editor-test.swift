@@ -12,6 +12,7 @@ struct NotesEditorTests {
         _ = NSApplication.shared
         testLiteralEditingAndNativeCommands(rendersMarkdown: false)
         testLiteralEditingAndNativeCommands(rendersMarkdown: true)
+        testNewlineScrolling()
         testUndoIsolation()
         testQuickActionReplacement()
         testCharacterCountReports()
@@ -84,6 +85,35 @@ struct NotesEditorTests {
         editor.textView.unmarkText()
         check("marked text commits through native AppKit editing", editor.textView.string.hasSuffix("語"))
         check("every published value equals the displayed source", changes.last == editor.textView.string)
+    }
+
+    private static func testNewlineScrolling() {
+        for rendersMarkdown in [false, true] {
+            for modifiers: NSEvent.ModifierFlags in [[], [.shift]] {
+                for (lineCount, suffix) in [(2, "text"), (12, "text"), (2, "- item"), (12, "- item")] {
+                    let source = String(repeating: "line\n", count: lineCount) + suffix
+                    let editor = makeEditor(
+                        input: NoteEditorInput(
+                            id: NoteID(rawValue: "Scrolling.md"), source: source, epoch: 1),
+                        rendersMarkdown: rendersMarkdown)
+                    let textView = editor.textView
+                    textView.setSelectedRange(NSRange(location: (source as NSString).length, length: 0))
+                    textView.scrollRangeToVisible(textView.selectedRange())
+                    for _ in 0..<8 {
+                        textView.keyDown(with: keyDown(
+                            "\r", keyCode: kVK_Return, modifiers: modifiers, in: editor.window))
+                        let screenRect = textView.firstRect(
+                            forCharacterRange: textView.selectedRange(), actualRange: nil)
+                        let caret = textView.convert(editor.window.convertFromScreen(screenRect), from: nil)
+                        check(
+                            "newline keeps caret visible (rendered: \(rendersMarkdown), "
+                                + "shift: \(modifiers.contains(.shift)), lines: \(lineCount), suffix: \(suffix))",
+                            caret.height > 0 && caret.minY >= textView.visibleRect.minY
+                                && caret.maxY <= textView.visibleRect.maxY + 1)
+                    }
+                }
+            }
+        }
     }
 
     private static func testQuickActionReplacement() {
