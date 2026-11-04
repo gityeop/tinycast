@@ -520,15 +520,16 @@ struct RootPaletteView: View {
                 return moveVertically(-1)
             }
             // Horizontal arrows step the grid; elsewhere they stay with the caret.
-            .onKeyPress(.leftArrow) {
+            .onKeyPress(keys: [.leftArrow, .rightArrow], phases: [.down, .repeat]) { press in
                 if vm.isControlListOpen { return .ignored }
                 if menuOpen { return .handled }
-                return moveHorizontally(-1) ? .handled : .ignored
-            }
-            .onKeyPress(.rightArrow) {
-                if vm.isControlListOpen { return .ignored }
-                if menuOpen { return .handled }
-                return moveHorizontally(1) ? .handled : .ignored
+                guard PaletteShortcut.handlesHorizontalArrow(
+                    command: press.modifiers.contains(.command), shift: press.modifiers.contains(.shift),
+                    option: press.modifiers.contains(.option), control: press.modifiers.contains(.control))
+                else {
+                    return .ignored
+                }
+                return moveHorizontally(press.key == .leftArrow ? -1 : 1) ? .handled : .ignored
             }
             // Plain ↵ runs an open menu's row or non-form selection; ⌘↵ submits forms.
             .onKeyPress(keys: [.return, KeyEquivalent("\u{3}")], phases: .down) { press in

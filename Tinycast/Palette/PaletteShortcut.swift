@@ -47,6 +47,10 @@ enum PaletteShortcut: Equatable {
     /// ⌘1…⌘0, matched by key code in the panel and handed over as a slot.
     case favoriteSlot(Int)
 
+    static func handlesHorizontalArrow(command: Bool, shift: Bool, option: Bool, control: Bool) -> Bool {
+        !command && !shift && !option && !control
+    }
+
     /// `matches` compares the pressed key through the active layout, so the letters stay positional.
     static func resolve(
         command: Bool, shift: Bool, option: Bool, control: Bool, isDeleteKey: Bool,

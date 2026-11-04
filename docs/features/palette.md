@@ -592,6 +592,9 @@ movement and the scroll-into-view intent all follow for free. The caret keeps �
 because `moveHorizontally` leaves →/← `.ignored` there, and the field editor then moves by a character
 exactly as the chord natively would. A chord carrying any modifier beyond ⌃ — ⌃⇧Q, say — is left alone.
 
+Modified horizontal arrows stay with the field editor, including ⇧←/⇧→ selection and ⌥/⌘ movement.
+The emoji grid must not consume these edits, including the ⇧← selection an input method uses to replace text.
+
 Character shortcut handlers accept every key so SwiftUI still calls them when the active input
 source produces a non-ASCII character. Inside the callback, `ASCIIKeyboardLayout` resolves
 `NSApp.currentEvent.keyCode` through the current ASCII-capable layout before comparing the shortcut.
