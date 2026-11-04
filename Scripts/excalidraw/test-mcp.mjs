@@ -177,6 +177,14 @@ try {
   const permissions = (await import("node:fs/promises")).stat;
   assert.equal((await permissions(socket)).mode & 0o777, 0o600);
   check("the socket is accessible only to its owning user");
+  const beforeBulk = await read(first);
+  await call(first, "apply_canvas_changes", {
+    canvasId: beforeBulk.canvasId, expectedRevision: beforeBulk.revision,
+    create: Array.from({ length: 77 }, (_, index) => ({
+      id: `canvas-scale-${index}`, type: "rectangle",
+      x: (index % 11) * 120, y: 600 + Math.floor(index / 11) * 80, width: 100, height: 60,
+    })),
+  });
   const internal = spawn(internalClient, [helper, socket], { stdio: ["ignore", "pipe", "pipe"] });
   let internalOutput = "";
   internal.stdout.on("data", (data) => { internalOutput += data.toString(); });

@@ -44,7 +44,7 @@ struct AIToolLoopProvider: AIProvider {
         _ request: AIRequest, into continuation: AIProviderStream.Continuation
     ) async throws {
         var messages = request.messages
-        var spent = 0
+        var spent: [Int: Int] = [:]
         var carried = 0
         var rounds = 0
         while maxRounds.map({ rounds < $0 }) ?? (carried < Self.maxTurnHistoryBytes) {
@@ -64,7 +64,8 @@ struct AIToolLoopProvider: AIProvider {
                 continuation.yield(
                     .toolCall(
                         id: call.id, origin: tool?.origin ?? "", title: tool?.title ?? call.name))
-                let result = await bounded(invoke(call), spent: &spent)
+                let limit = tool?.resultByteLimit ?? Self.maxResultBytes
+                let result = await bounded(invoke(call), limit: limit, spent: &spent[limit, default: 0])
                 continuation.yield(.toolResult(id: call.id, isError: result.isError))
                 carried += result.content.utf8.count
                 messages.append(AIMessage(role: .tool, text: "", toolResult: result))
@@ -97,11 +98,12 @@ struct AIToolLoopProvider: AIProvider {
         return (text, calls)
     }
 
-    private func bounded(_ result: AIToolResult, spent: inout Int) -> AIToolResult {
-        guard spent < Self.maxTurnResultBytes else {
+    private func bounded(_ result: AIToolResult, limit: Int, spent: inout Int) -> AIToolResult {
+        let turnResultLimit = max(Self.maxTurnResultBytes, limit * 4)
+        guard spent < turnResultLimit else {
             return .failure(result.callID, "This turn's tool output budget is used up.")
         }
-        let allowance = min(Self.maxResultBytes, Self.maxTurnResultBytes - spent)
+        let allowance = min(limit, turnResultLimit - spent)
         let utf8 = result.content.utf8
         spent += min(utf8.count, allowance)
         guard utf8.count > allowance else { return result }

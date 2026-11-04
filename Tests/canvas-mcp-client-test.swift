@@ -34,6 +34,8 @@ struct CanvasMCPClientTests {
 
         let chat = UUID()
         let before = await read(coordinator, chat: chat)
+        let sceneBytes = try JSONSerialization.data(withJSONObject: before.mapValues(\.jsonObject)).count
+        precondition(sceneBytes > AIToolLoopProvider.maxResultBytes)
         let provider = AIToolLoopProvider(
             base: CanvasScriptedProvider(), tools: coordinator.tools(scopedTo: nil), maxRounds: 8
         ) { call in await coordinator.invoke(call, in: chat) }
@@ -53,7 +55,7 @@ struct CanvasMCPClientTests {
         precondition(before["elements"] != nil && before["elements"] == after["elements"])
         precondition(core.permissionQuestions.count == 1)
         precondition(core.permissionQuestions[0].contains("open canvas"))
-        print("PASS: the Oncast AI tool loop reads, creates, updates and deletes on the real canvas with one chat consent")
+        print("PASS: the Oncast AI tool loop edits a canvas larger than 32 KB with one chat consent and no lost elements")
 
         core.aiChatCoordinator.everyChatRunsItsOwnTools = true
         coordinator.applyEnabled()

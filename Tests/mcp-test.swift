@@ -142,7 +142,7 @@ struct MCPTests {
         expect(
             tools.last?.inputSchema.objectValue?["type"]?.stringValue == "object",
             "a tool without a schema still gets one the providers accept")
-        let ai = tools.first?.aiTool
+        let ai = tools.first?.aiTool()
         expect(
             ai?.origin == "Files" && ai?.title == "read_file",
             "the transcript pair travels with the tool, so the AI layer never parses a wire name")

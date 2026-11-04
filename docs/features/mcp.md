@@ -29,6 +29,9 @@ nothing about MCP. `AIChatCoordinator.send` is the one place the two meet.
   to Ask Each Chat; its consent text identifies the open canvas. Turning off its tools or choosing
   Never Allow withholds it. API routes use Oncast's client; Codex and Claude receive the same server
   definition and show “Ready in chat” rather than a fictitious resident connection.
+  The native AI loop gives built-in tools up to 128 KiB per result and 512 KiB per turn, so the
+  observed 77-element canvas is not cut at the external tools' 32 KiB/128 KiB limits. The 1 MiB
+  turn-history ceiling still applies; external servers cannot request the built-in allowance.
 - **Credentials live only in the login Keychain.** `MCPServer` persists the endpoint, authentication
   mode, the header *name*, the command, its arguments and its environment variable *names* in
   `UserDefaults`; it never contains a secret. The HTTP header value, environment values, OAuth client

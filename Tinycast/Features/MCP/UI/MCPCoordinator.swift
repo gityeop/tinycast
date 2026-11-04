@@ -86,7 +86,9 @@ final class MCPCoordinator {
                 guard let server = server(slug: tool.serverSlug), server.id == tool.serverID else { return false }
                 return server.trust != .never
             }
-            .map(\.aiTool)
+            .map { tool in
+                tool.aiTool(resultByteLimit: store.isBuiltIn(tool.serverID) ? 131_072 : nil)
+            }
     }
 
     /// The same list for a CLI route; it starts its own copies, so Tinycast's need not be ready.
