@@ -12,6 +12,11 @@ The generated `Tinycast/Resources/Excalidraw/` folder is committed and copied in
 resource. Xcode builds do not require Node.js or network access. Do not edit the generated bundle.
 The lockfile pins the editor, React and the asset build toolchain.
 
+The build removes the unused `VITE_APP_FIREBASE_CONFIG` object shipped in Excalidraw 0.18.1 before
+bundling. Oncast uses IndexedDB, not the upstream Firebase app configuration. The build fails if the
+expected upstream definition changes or if generated assets still contain that configuration or a
+Google API key. Community-library lookup URLs and third-party license notices remain intact.
+
 The wrapper uses Excalidraw's supported component, menu, theme and change APIs. It supplies no welcome
 screen, promotional content or collaboration service. IndexedDB retains drawings, attached files and
 library items in the app's WebKit data store. Appearance follows the containing native window.
