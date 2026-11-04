@@ -8,6 +8,18 @@ Both are distributed under the GNU Affero General Public License v3 — see [LIC
 
 Tinycast is licensed under the GNU Affero General Public License v3 — see [LICENSE](LICENSE). It
 also redistributes the third-party material recorded below, under the terms stated for each.
+The full LICENSE and SOURCE_CODE.md source-delivery guide are included in the app's Resources folder
+and can be opened from About. Excalidraw's detailed notices are in
+`Excalidraw/THIRD-PARTY-LICENSES.txt` in the same Resources folder.
+
+## Embedded Excalidraw — `Tinycast/Resources/Excalidraw/`
+
+The editor bundles `@excalidraw/excalidraw` 0.18.1 (MIT), React and its runtime dependencies.
+Its source wrapper and reproducible asset build live under `Scripts/excalidraw/`.
+The bundle includes `THIRD-PARTY-LICENSES.txt`, generated JavaScript license comments, and the
+original font files with their copyright and license metadata. Excalidraw's MIT license and the
+font notices are preserved alongside the build sources. The upstream editor is available at
+<https://github.com/excalidraw/excalidraw>.
 
 ## Brand marks — `Tinycast/Assets.xcassets/AIBrand*.imageset`
 

@@ -12,10 +12,10 @@ struct MCPTool: Equatable, Sendable {
     /// The name the model sees. A wire name has to survive both providers' character rules.
     var wireName: String { MCPToolName.compose(slug: serverSlug, tool: name) }
 
-    var aiTool: AITool {
+    func aiTool(resultByteLimit: Int? = nil) -> AITool {
         AITool(
             name: wireName, description: description, parameters: inputSchema,
-            origin: serverTitle, title: name)
+            origin: serverTitle, title: name, resultByteLimit: resultByteLimit)
     }
 
     /// Everything a server listed, dropping entries too malformed to call.

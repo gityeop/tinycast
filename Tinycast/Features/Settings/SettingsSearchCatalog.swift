@@ -295,8 +295,8 @@ enum SettingsSearchCatalog {
             .aiSystemPrompt, "Send a system prompt",
             keywords: ["instructions", "persona"]),
         .init(
-            .aiMCPServers, "Enable MCP servers",
-            keywords: ["tools", "model context protocol"]),
+            .aiMCPServers, "Enable external MCP servers",
+            keywords: ["tools", "model context protocol", "oncast canvas", "excalidraw"]),
         .init(
             .aiMCPServers, "Add MCP Server",
             keywords: ["tools", "model context protocol", "stdio"]),

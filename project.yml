@@ -12,8 +12,8 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.1.4"
-    CURRENT_PROJECT_VERSION: "16"
+    MARKETING_VERSION: "0.1.8"
+    CURRENT_PROJECT_VERSION: "22"
     SWIFT_VERSION: "6.0"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Manual
@@ -43,14 +43,29 @@ targets:
           - Features/Clipboard/Service/ClipboardTextExtractor.swift
           - Features/Clipboard/Service/ClipboardTextHelper.swift
           - Features/FileSearch/Helper
+          - Features/Excalidraw/Helper
           - Resources/EmojiKeywords
+          - Resources/Excalidraw
       # A folder reference keeps the packs in their own directory, which `EmojiIndex` lists.
       - path: Tinycast/Resources/EmojiKeywords
+        type: folder
+      - path: Tinycast/Resources/Excalidraw
         type: folder
       # The MIT mark's licence asks the notice to travel with the binary, not just the repo.
       - path: NOTICE.md
         buildPhase: resources
+      - path: LICENSE
+        buildPhase: resources
+      - path: SOURCE_CODE.md
+        buildPhase: resources
     dependencies:
+      - target: OncastCanvasMCP
+        link: false
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
       - target: ClipboardTextHelper
         link: false
         embed: true
@@ -82,6 +97,18 @@ targets:
         Debug:
           PRODUCT_NAME: Oncast
           PRODUCT_BUNDLE_IDENTIFIER: com.gityeop.tinycast
+
+  OncastCanvasMCP:
+    type: tool
+    platform: macOS
+    sources:
+      - Tinycast/Features/Excalidraw/Helper
+      - Tinycast/Features/Excalidraw/CanvasProtocol.swift
+    settings:
+      base:
+        EXECUTABLE_NAME: OncastCanvasMCP
+        PRODUCT_MODULE_NAME: OncastCanvasMCP
+        SKIP_INSTALL: YES
 
   ClipboardTextHelper:
     type: tool

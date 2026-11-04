@@ -7,6 +7,7 @@ struct MCPServerEditorTarget: Identifiable {
     var proposal: MCPInstallProposal?
     var sources: [URL] = []
     var installationRoot: URL?
+    var isBuiltIn = false
     var id: UUID { server.id }
 }
 
@@ -63,7 +64,8 @@ struct MCPServerEditor: View {
         self.onCancel = onCancel
         self.onInstall = onInstall
         let server = target.server
-        let secrets = target.isNew ? MCPSecretStore.Secrets() : MCPSecretStore().secrets(for: server.id)
+        let secrets = target.isNew || target.isBuiltIn
+            ? MCPSecretStore.Secrets() : MCPSecretStore().secrets(for: server.id)
         _usesOAuth = State(initialValue: server.oauth == true)
         _clientID = State(initialValue: secrets.oauth?.clientID ?? "")
         _clientSecret = State(initialValue: secrets.oauth?.clientSecret ?? "")
@@ -117,85 +119,15 @@ struct MCPServerEditor: View {
                         MCPInstallPlanView(plan: proposal.installation, root: root)
                     }
                 }
-                Section {
-                    field("Name") {
-                        TextField("Name", text: $name, prompt: Text("GitHub"))
-                            .settingsEditorTextField()
-                    }
-                    field("Handle") {
-                        Text("@\(MCPSlug.normalize(name.isEmpty ? target.server.slug : name))")
+                if target.isBuiltIn {
+                    Section {
+                        LabeledContent("Server", value: target.server.title)
+                        Text("Read and edit the Excalidraw canvas open in Oncast. "
+                            + "The connection is included with the app and needs no setup.")
                             .foregroundStyle(.secondary)
                     }
-                    field("Connection") {
-                        SteadySegmentedPicker(
-                            title: "Connection",
-                            options: Kind.allCases.map { .init(value: $0, title: $0.title) },
-                            selection: $kind)
-                    }
-                    if kind == .http {
-                        field("URL") {
-                            TextField("URL", text: $url, prompt: Text("https://example.com/mcp"))
-                                .settingsEditorTextField()
-                        }
-                        field("Authentication") {
-                            Picker("Authentication", selection: $usesOAuth) {
-                                Text("Header").tag(false)
-                                Text("OAuth").tag(true)
-                            }
-                            .labelsHidden()
-                        }
-                        if usesOAuth {
-                            oauthFields
-                        } else {
-                            field("Header") {
-                                TextField("Header", text: $headerName, prompt: Text("Authorization"))
-                                    .settingsEditorTextField()
-                            }
-                            field("Value") {
-                                RevealableSecureField(
-                                    title: "Value", text: $headerValue, prompt: Text("Bearer …")
-                                )
-                                .settingsEditorTextField()
-                            }
-                        }
-                    } else {
-                        field("Command") {
-                            TextField("Command", text: $command, prompt: Text("npx"))
-                                .settingsEditorTextField()
-                        }
-                        field("Arguments") {
-                            TextField(
-                                "Arguments", text: $argumentText,
-                                prompt: Text("-y @modelcontextprotocol/server-filesystem ~/Desktop")
-                            )
-                            .settingsEditorTextField()
-                        }
-                        field("Environment") {
-                            TextField(
-                                "Environment", text: $environmentText,
-                                prompt: Text("GITHUB_TOKEN=…"), axis: .vertical
-                            )
-                            .textFieldStyle(.plain)
-                            .lineLimit(2...5)
-                            .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
-                        }
-                    }
-                    if kind == .http, let proposal = target.proposal, !proposal.environmentKeys.isEmpty {
-                        field("Service environment") {
-                            TextField("Service environment", text: $environmentText, axis: .vertical)
-                                .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
-                        }
-                    }
-                } footer: {
-                    Text(
-                        kind == .http
-                            ? "Remote endpoints must use HTTPS. Credentials are stored in your "
-                                + "login Keychain, never in preferences."
-                            : "The command runs on this Mac with your own account. One "
-                                + "NAME=value per line; values are stored in your login Keychain."
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                } else {
+                    connectionSection
                 }
 
                 Section {
@@ -258,6 +190,89 @@ struct MCPServerEditor: View {
         .onChange(of: kind) { cancelOperation() }
         .onChange(of: clientID) { cancelOperation() }
         .onChange(of: clientSecret) { cancelOperation() }
+    }
+
+    private var connectionSection: some View {
+        Section {
+            field("Name") {
+                TextField("Name", text: $name, prompt: Text("GitHub"))
+                    .settingsEditorTextField()
+            }
+            field("Handle") {
+                Text("@\(MCPSlug.normalize(name.isEmpty ? target.server.slug : name))")
+                    .foregroundStyle(.secondary)
+            }
+            field("Connection") {
+                SteadySegmentedPicker(
+                    title: "Connection",
+                    options: Kind.allCases.map { .init(value: $0, title: $0.title) },
+                    selection: $kind)
+            }
+            if kind == .http {
+                field("URL") {
+                    TextField("URL", text: $url, prompt: Text("https://example.com/mcp"))
+                        .settingsEditorTextField()
+                }
+                field("Authentication") {
+                    Picker("Authentication", selection: $usesOAuth) {
+                        Text("Header").tag(false)
+                        Text("OAuth").tag(true)
+                    }
+                    .labelsHidden()
+                }
+                if usesOAuth {
+                    oauthFields
+                } else {
+                    field("Header") {
+                        TextField("Header", text: $headerName, prompt: Text("Authorization"))
+                            .settingsEditorTextField()
+                    }
+                    field("Value") {
+                        RevealableSecureField(
+                            title: "Value", text: $headerValue, prompt: Text("Bearer …")
+                        )
+                        .settingsEditorTextField()
+                    }
+                }
+            } else {
+                field("Command") {
+                    TextField("Command", text: $command, prompt: Text("npx"))
+                        .settingsEditorTextField()
+                }
+                field("Arguments") {
+                    TextField(
+                        "Arguments", text: $argumentText,
+                        prompt: Text("-y @modelcontextprotocol/server-filesystem ~/Desktop")
+                    )
+                    .settingsEditorTextField()
+                }
+                field("Environment") {
+                    TextField(
+                        "Environment", text: $environmentText,
+                        prompt: Text("GITHUB_TOKEN=…"), axis: .vertical
+                    )
+                    .textFieldStyle(.plain)
+                    .lineLimit(2...5)
+                    .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
+                }
+            }
+            if kind == .http, let proposal = target.proposal, !proposal.environmentKeys.isEmpty {
+                field("Service environment") {
+                    TextField("Service environment", text: $environmentText, axis: .vertical)
+                        .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
+                }
+            }
+        } footer: {
+            Text(
+                kind == .http
+                    ? "Remote endpoints must use HTTPS. Credentials are stored in your "
+                        + "login Keychain, never in preferences."
+                    : "The command runs on this Mac with your own account. One "
+                        + "NAME=value per line; values are stored in your login Keychain."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
     }
 
     private var oauthFields: some View {

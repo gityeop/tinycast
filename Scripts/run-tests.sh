@@ -343,6 +343,12 @@ run command-dispatch-test  Tinycast/Features/Launcher/UI/LauncherCoordinator.swi
                            Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
                            Tinycast/Features/Extensions/Model/ExtensionDeepLink.swift \
                            Tinycast/Features/Extensions/Model/ExtensionLaunchType.swift
+run excalidraw-test        Tinycast/Features/Excalidraw/ExcalidrawViewController.swift \
+                           Tinycast/Features/Excalidraw/CanvasProtocol.swift \
+                           Tinycast/Features/Excalidraw/CanvasSocketServer.swift \
+                           Tinycast/Features/Excalidraw/ExcalidrawAssetsHandler.swift \
+                           Tinycast/Features/Excalidraw/ExcalidrawWindowChrome.swift \
+                           Tinycast/Windows/WindowChrome.swift
 run command-deeplink-test  $L/CommandDeepLink.swift $L/CommandID.swift \
                            Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
                            Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
@@ -721,6 +727,7 @@ run mcp-test               Tinycast/Features/Settings/AppSettingsKey.swift \
                            Tinycast/Features/AI/Model/JSONValue.swift \
                            Tinycast/Features/AI/Model/ChatReferences.swift \
                            Tinycast/Features/MCP/Model/*.swift \
+                           Tinycast/Features/Excalidraw/CanvasMCPServer.swift \
                            Tinycast/Features/MCP/Settings/MCPSettingsStore.swift
 run mcp-setup-test         Tinycast/Features/AI/Model/AIRequest.swift \
                            Tinycast/Features/AI/Model/AIConnection.swift \

@@ -50,6 +50,7 @@ struct AIChatTests {
         await anUnlimitedToolLoopRunsPastEveryStep()
         await anUnlimitedToolLoopStopsWhenItsHistoryIsFull()
         await toolOutputIsBoundedBeforeItIsBilled()
+        await builtInBudgetKeepsExternalResultsBounded()
         toolUsesPersistAndSettleOnReload()
         renamesAndPinsSurviveSavesAndSpareRetention()
         transcriptsExportAndDropOnlyATrailingReply()
@@ -383,6 +384,25 @@ struct AIChatTests {
             fed.utf8.count <= AIToolLoopProvider.maxResultBytes + 32,
             "a huge result is cut to the per-call ceiling before it enters the context")
         expect(fed.hasSuffix("truncated."), "and says it was cut rather than pretending it was all")
+    }
+
+    static func builtInBudgetKeepsExternalResultsBounded() async {
+        let calls: [[AIStreamEvent]] = (0..<5).map { index in
+            [.toolCallRequested(AIToolCall(id: "c\(index)", name: "fs__read", arguments: "{}"))]
+        }
+        let base = ScriptedProvider(rounds: calls + [[.finished]])
+        let invoker = RecordingInvoker(result: String(repeating: "x", count: AIToolLoopProvider.maxResultBytes))
+        let provider = AIToolLoopProvider(
+            base: base, tools: [
+                AITool(name: "fs__read", description: "", parameters: .object([:]), origin: "Files"),
+                AITool(
+                    name: "canvas__read", description: "", parameters: .object([:]), origin: "Canvas",
+                    resultByteLimit: 131_072)
+            ], maxRounds: 10, invoke: { call in await invoker.invoke(call) })
+        _ = await collect(provider)
+        expect(
+            base.requests.last?.messages.last?.toolResult?.isError == true,
+            "offering a larger built-in allowance does not lift an external tool's per-turn ceiling")
     }
 
     static func toolUsesPersistAndSettleOnReload() {

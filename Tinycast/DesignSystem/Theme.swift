@@ -210,6 +210,8 @@ enum Theme {
         /// AI Chat's opening size; the user owns it from there, autosaved.
         static let aiChatWindow = CGSize(width: 960, height: 660)
         static let aiChatWindowMinimum = CGSize(width: 680, height: 440)
+        static let excalidrawWindow = CGSize(width: 1200, height: 800)
+        static let excalidrawWindowMinimum = CGSize(width: 800, height: 600)
         static let aiChatSidebarMinimum: CGFloat = 240
         static let aiChatSidebarMaximum: CGFloat = 340
         /// The sidebar's search capsule, a row's height so it lines up with the list below it.
@@ -403,6 +405,9 @@ enum Theme {
     }
 
     enum Colors {
+        static let excalidrawCanvas = adaptive(
+            dark: NSColor(srgbRed: 18 / 255, green: 18 / 255, blue: 18 / 255, alpha: 1),
+            light: .white)
         /// Resolves against the window's `effectiveAppearance`, so a token repaints on its own.
         static func adaptive(dark: NSColor, light: NSColor) -> Color {
             Color(nsColor: NSColor(name: nil) { $0.isDark ? dark : light })

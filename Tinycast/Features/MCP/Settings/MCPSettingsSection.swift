@@ -12,17 +12,24 @@ struct MCPSettingsSection: View {
     var body: some View {
         @Bindable var appSettings = appSettings
         Section {
+            ForEach(store.servers.filter { store.isBuiltIn($0.id) }) { server in
+                MCPServerRow(
+                    server: server, status: coordinator.statusLabel(for: server), isBuiltIn: true,
+                    onEdit: {
+                        editor = MCPServerEditorTarget(server: server, isNew: false, isBuiltIn: true)
+                    }, onRemove: nil)
+            }
             Toggle(isOn: $appSettings.mcpEnabled) {
-                SettingsRowTitle(.aiMCPServers, "Enable MCP servers")
+                SettingsRowTitle(.aiMCPServers, "Enable external MCP servers")
             }
             Group {
-                if store.servers.isEmpty {
-                    Text("No MCP servers yet.")
+                if externalServers.isEmpty {
+                    Text("No external MCP servers yet.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(store.servers) { server in
+                    ForEach(externalServers) { server in
                         MCPServerRow(
-                            server: server, status: coordinator.status(of: server.id),
+                            server: server, status: coordinator.statusLabel(for: server),
                             onEdit: { editor = MCPServerEditorTarget(server: server, isNew: false) },
                             onRemove: { pendingRemoval = server })
                     }
@@ -46,7 +53,9 @@ struct MCPSettingsSection: View {
         } header: {
             SettingsSectionHeader(.aiMCPServers)
         } footer: {
-            Text("Type @slug to address one server. A chat asks before its first tool call.")
+            Text("Oncast Canvas is built in for models with tool support. "
+                + "Open Excalidraw to read or edit its canvas. "
+                + "Type @slug to address one server. A chat asks before its first tool call.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -61,6 +70,10 @@ struct MCPSettingsSection: View {
         } message: { _ in
             Text("Its tools stop being offered, and its stored credentials are deleted.")
         }
+    }
+
+    private var externalServers: [MCPServer] {
+        store.servers.filter { !store.isBuiltIn($0.id) }
     }
 
     private var removalBinding: Binding<Bool> {
@@ -92,9 +105,10 @@ struct MCPSettingsSection: View {
 
 private struct MCPServerRow: View {
     let server: MCPServer
-    let status: MCPServerStatus
+    let status: String
+    var isBuiltIn = false
     let onEdit: () -> Void
-    let onRemove: () -> Void
+    let onRemove: (() -> Void)?
 
     var body: some View {
         SettingsRow(title: server.title, subtitle: subtitle) {
@@ -105,18 +119,21 @@ private struct MCPServerRow: View {
                 .buttonStyle(.plain)
                 .help("Edit \(server.title)")
                 .accessibilityLabel("Edit \(server.title)")
-            Button(action: onRemove) {
-                Image(systemName: "trash").foregroundStyle(.red)
+            if let onRemove {
+                Button(action: onRemove) {
+                    Image(systemName: "trash").foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+                .help("Remove \(server.title)")
+                .accessibilityLabel("Remove \(server.title)")
             }
-            .buttonStyle(.plain)
-            .help("Remove \(server.title)")
-            .accessibilityLabel("Remove \(server.title)")
         }
     }
 
     /// The slug leads, because it is the half a reader has to type into the composer.
     private var subtitle: String {
-        let state = server.isEnabled ? status.label : "Disabled"
+        let state = server.isEnabled ? status : "Disabled"
+        if isBuiltIn { return "@\(server.slug) · Built-in · \(state)" }
         return "@\(server.slug) · \(state) · \(server.transport.summary)"
     }
 }

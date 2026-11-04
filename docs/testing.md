@@ -109,6 +109,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `scopes-test` | `Launcher/Model/SearchScopes.swift` |
 | `app-name-test` | `Platform/AppDisplayName.swift` — every path that names a scanned bundle |
 | `calc-test` | all of `Calculator/Model/` |
+| `excalidraw-test` | Bundled editor rendering, compact chrome, appearance changes, and drawing persistence across recreation and reload |
+| `Scripts/test-canvas-mcp.sh` | Real MCP helper and editor through the official SDK and Oncast's native client/tool loop; built-in registration, consent, disabled external servers, mutations, exports and revision conflicts |
 | `calendar-test` | all of `Calendar/Model/` plus `EventEditorSession` — links, join window, day buckets, draft and form focus |
 | `mcp-setup-test` | Native MCP setup tools over authenticated HTTP, independent per-server outcome persistence, public documentation discovery and grounded plans |
 | `mcp-installation-test` | Approved build steps, working folders and secrets, managed service readiness/restoration, real stdio and HTTP MCP handshakes, registration, occupied ports, failed builds and child-process cancellation |

@@ -83,17 +83,28 @@ ONCAST_TEST_MCP_DOCS=1 ./Scripts/run-tests.sh mcp-setup-test
 
 ## Invariants
 
-- **MCP is off out of the box, and off means fully off.** `AppSettings.mcpEnabled` is the flag and
-  `MCPCoordinator.applyEnabled()` is the only place that projects it: no connection opened, no local
-  process resident, no tool named to any model. `aiEnabled` off does the same, because chat is the
-  only consumer. That reaches the Codex helper too, which keeps what it was launched with until it
-  exits: when MCP goes off, or a server it runs is removed, set to Never Allow or signed out of,
+- **AI off stops every MCP connection; external MCP is separately opt-in.**
+  `AppSettings.mcpEnabled` controls external servers. `MCPCoordinator.applyEnabled()` projects it
+  without changing the built-in canvas connection: no external connection, resident process or
+  tool is offered while the external switch is off. `aiEnabled` off stops both kinds. That reaches
+  the Codex helper too, which keeps what it was launched with until it exits: when external MCP
+  goes off, or a server it runs is removed, set to Never Allow or signed out of,
   `ChatGPTSubscriptionManager.dropWithdrawnServers` stops it between turns rather than leave the
   server process and any lent token in it for its ten idle minutes; a change made mid-turn leaves it
   to the next turn's relaunch or that idle stop. Both flags and `mcpServers`
   are excluded from settings backups — a server list is a source of executable code and a
   destination for chat context, and the flag doubles as consent to run it, so an import can never
   arrive having connected one.
+- **Oncast Canvas is registered automatically from the current app bundle.** `AppCore` injects
+  `CanvasMCPServer` into the settings store with a stable identity. The store retains enabled/trust
+  choices while refreshing the command from that bundle on launch. Settings shows it above the
+  external switch, with permission controls but no editable command or removal action. It defaults
+  to Ask Each Chat; its consent text identifies the open canvas. Turning off its tools or choosing
+  Never Allow withholds it. API routes use Oncast's client; Codex and Claude receive the same server
+  definition and show “Ready in chat” rather than a fictitious resident connection.
+  The native AI loop gives built-in tools up to 128 KiB per result and 512 KiB per turn, so the
+  observed 77-element canvas is not cut at the external tools' 32 KiB/128 KiB limits. The 1 MiB
+  turn-history ceiling still applies; external servers cannot request the built-in allowance.
 - **Credentials live only in the login Keychain.** `MCPServer` persists the endpoint, authentication
   mode, the header *name*, the command, its arguments and its environment variable *names* in
   `UserDefaults`; it never contains a secret. The HTTP header value, environment values, OAuth client
@@ -381,7 +392,7 @@ the CLI starts its own copy, and a second would only run it twice.
 `AIChatCoordinator.everyChatRunsItsOwnTools` the verdict, and `AppCore` re-applies it whenever that
 verdict flips, so choosing an API model in either chat starts the server again. A remote server
 stays connected — a session, not a process — so its row keeps a live status; a local one reads
-Stopped.
+Ready in chat.
 
 ## Settings
 
@@ -394,6 +405,9 @@ caught there rather than in the middle of a conversation.
 
 ## Manual sweep
 
+- With external MCP off, Oncast Canvas appears as Built-in. Its editor offers enabled/trust and
+  Test Connection, with no command or credential fields. Tool-capable chats can read and edit the
+  open canvas after consent. Disabling its tools persists across relaunches and app moves.
 - An HTTP server with a bearer header reports its tool count from Test Connection and from its row.
 - An OAuth-only server signs in through the browser with client fields empty when DCR is available;
   Test Connection and a BYOK chat use the session. Repeat with supplied client credentials.
@@ -420,7 +434,8 @@ caught there rather than in the middle of a conversation.
   rather than sending the old token; Codex's own `~/.codex/config.toml` is byte-identical after.
 - With `/Library/Application Support/ClaudeCode/managed-mcp.json` present, the Claude row says MCP
   is managed by your organization and the turn runs with no MCP flags at all.
-- Switching MCP off, then AI off, leaves no server process resident — including right after a
+- Switching external MCP off leaves only enabled built-in access; switching AI off leaves no server
+  process resident — including right after a
   Codex turn that used a local server.
 - A settings backup carries neither a server nor the flag.
 - Harnesses: `mcp-test`, `mcp-stdio-test` and `mcp-oauth-test`, plus the tool halves of `ai-provider-test`

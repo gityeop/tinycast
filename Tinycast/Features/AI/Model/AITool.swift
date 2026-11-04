@@ -8,16 +8,18 @@ struct AITool: Equatable, Sendable {
     /// What the transcript row says the tool belongs to, and what it calls the tool.
     let origin: String
     let title: String
+    let resultByteLimit: Int?
 
     init(
         name: String, description: String, parameters: JSONValue, origin: String,
-        title: String? = nil
+        title: String? = nil, resultByteLimit: Int? = nil
     ) {
         self.name = name
         self.description = description
         self.parameters = parameters
         self.origin = origin
         self.title = title ?? name
+        self.resultByteLimit = resultByteLimit
     }
 }
 

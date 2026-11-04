@@ -146,8 +146,11 @@ driven imperatively from AppKit. Extension menu extras are dynamic `NSStatusItem
   `NSSplitViewController` with a collapsible sidebar of saved chats beside the open conversation, as
   Settings is built. The conversation lives on `AppCore.aiChats`, not the window, so closing it cancels
   nothing. Quick AI is the same feature's palette screen. See [features/ai.md](features/ai.md).
+- **Excalidraw** — a resizable `AppWindowController` window owned by `ExcalidrawCoordinator`, hosting
+  the bundled editor in `WKWebView` with persistent local drawing storage. See
+  [features/excalidraw.md](features/excalidraw.md).
 - **The main menu** — shaped by `TinycastApp`'s `.commands`, which rebinds ⌘Q to Close Window: the AI
-  Chat window when it is key, otherwise Settings. It is only ever on screen while a titled window is
+  Excalidraw or AI Chat window when it is key, otherwise Settings. It is only ever on screen while a titled window is
   open, so it is those windows' menu bar. It must stay declarative.
 - **Dialogs** — borderless `DialogPanel`s driven by `DialogController`, the app's only presenter for
   confirmations, failure reports and value prompts. Presentation is `async`, so nothing blocks the main

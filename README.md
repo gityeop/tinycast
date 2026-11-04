@@ -15,7 +15,7 @@ extensions natively in JavaScriptCore.
 
 App launching, global and per-app hotkeys, clipboard history, calculator, notes, snippets,
 quicklinks, window management, file search, calendar, emoji and symbols, camera preview,
-AI chat, quick actions, and Raycast extensions.
+AI chat, quick actions, an embedded Excalidraw editor with local MCP agent access, and Raycast extensions.
 
 ## Deeplinks
 
@@ -46,3 +46,8 @@ preferences and permission grants. Upstream automatic updates are disabled.
 Oncast is based on [Tinycast](https://github.com/abue-ammar/tinycast) by Abue Ammar and remains
 licensed under [AGPL-3.0](LICENSE). Original copyright and third-party notices are retained in
 [NOTICE.md](NOTICE.md), which is included in the app bundle.
+
+About → Source Code & Terms explains the license and how to obtain the source for a specific build.
+The app includes the full [LICENSE](LICENSE) and [source guide](SOURCE_CODE.md). Release distributors
+must attach the matching `Oncast-source-<identifier>.tar.gz` and its checksum alongside the app;
+see [the release instructions](docs/release.md#oncast-license-and-source-delivery).

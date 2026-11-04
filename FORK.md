@@ -52,6 +52,13 @@ expansion, UI localization, experimental Dictation and MCP permission-policy cha
 
 ## Build and run
 
+The launcher includes an **Excalidraw** command that opens the bundled editor inside Oncast, with a
+compact titlebar, an uncluttered canvas, local drawing storage, and file import/export sheets. Its native address is
+`oncast://command/excalidraw`. See [Excalidraw](docs/features/excalidraw.md).
+The editor menu can copy a local MCP connection entry. Its bundled native helper lets agents read,
+edit and render the open canvas, with revision checks and atomic changes.
+Oncast's own tool-capable AI chats get an automatic **Oncast Canvas** connection in Settings → AI → MCP.
+
 Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` or set
 `DEVELOPER_DIR` to its `Contents/Developer` directory, then run:
 
@@ -61,7 +68,7 @@ Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` o
 
 The script regenerates the project, builds Debug, and launches `build/Build/Products/Debug/Oncast.app`.
 Optional modes are `--verify`, `--debug`, `--logs`, and `--telemetry`.
-The default signing identity is ad-hoc. To preserve macOS permission grants across rebuilds,
+To preserve macOS permission grants across rebuilds,
 `script/build_and_run.sh` defaults to Developer ID Application: Sang Yeop Lim (79Q5RV23F9),
 the same identity as the installed Oncast. It verifies the signature before launching. Missing signing
 credentials fail the build; there is no automatic ad-hoc signing. Use `--build-only` to build and verify
