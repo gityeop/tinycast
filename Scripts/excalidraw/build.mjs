@@ -7,6 +7,7 @@ import { dirname, resolve } from "node:path";
 const root = dirname(fileURLToPath(import.meta.url));
 const output = resolve(root, "../../Tinycast/Resources/Excalidraw");
 await mkdir(output, { recursive: true });
+let removedFirebaseConfigs = 0;
 const result = await build({
   absWorkingDir: root,
   entryPoints: ["src/editor.jsx"],
@@ -22,8 +23,31 @@ const result = await build({
   sourcemap: false,
   legalComments: "linked",
   metafile: true,
+  write: false,
   define: { "process.env.NODE_ENV": '"production"' },
+  plugins: [{
+    name: "oncast-local-canvas",
+    setup(builder) {
+      builder.onLoad({ filter: /\/@excalidraw\/excalidraw\/dist\/prod\/.*\.js$/ }, async ({ path }) => {
+        const source = await readFile(path, "utf8");
+        const contents = source.replace(/\bVITE_APP_FIREBASE_CONFIG:'(?:\\.|[^'\\])*',/g, () => {
+          removedFirebaseConfigs += 1;
+          return "";
+        });
+        return { contents, loader: "js", resolveDir: dirname(path) };
+      });
+    },
+  }],
 });
+if (removedFirebaseConfigs !== 1) {
+  throw new Error("Expected exactly one upstream Excalidraw Firebase configuration to remove.");
+}
+for (const file of result.outputFiles) {
+  if (/VITE_APP_FIREBASE_CONFIG|AIza[0-9A-Za-z_-]{35}/.test(file.text)) {
+    throw new Error("Firebase configuration or a Google API key remains in the generated editor.");
+  }
+}
+for (const file of result.outputFiles) await writeFile(file.path, file.contents);
 await cp(resolve(root, "node_modules/@excalidraw/excalidraw/dist/prod/fonts"), resolve(output, "fonts"), {
   recursive: true,
 });
