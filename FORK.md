@@ -52,6 +52,12 @@ expansion, UI localization, experimental Dictation and MCP permission-policy cha
 
 ## Build and run
 
+The launcher includes an **Excalidraw** command that opens the bundled editor inside Oncast, with a
+compact titlebar, an uncluttered canvas, local drawing storage, and file import/export sheets. Its native address is
+`oncast://command/excalidraw`. See [Excalidraw](docs/features/excalidraw.md).
+The editor menu can copy a local MCP connection entry. Its bundled native helper lets agents read,
+edit and render the open canvas, with revision checks and atomic changes.
+
 Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` or set
 `DEVELOPER_DIR` to its `Contents/Developer` directory, then run:
 

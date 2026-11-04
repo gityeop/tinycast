@@ -197,6 +197,9 @@ final class LauncherCoordinator {
         case .openCamera:
             dismissPalette()
             Task { await core.cameraCoordinator.show() }
+        case .excalidraw:
+            dismissPalette()
+            core.excalidrawCoordinator.show()
         case .confetti:
             dismissPalette()
             core.confettiCoordinator.show()

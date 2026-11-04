@@ -193,6 +193,9 @@ final class AppCore {
         settings: settings, appIndex: appIndex, session: windowSwitch, palette: palette,
         paletteCoordinator: paletteCoordinator, core: self)
     @ObservationIgnored private(set) lazy var cameraCoordinator = CameraCoordinator(core: self)
+    @ObservationIgnored private(set) lazy var excalidrawCoordinator = ExcalidrawCoordinator(
+        activation: activationPolicy,
+        onFailure: { [weak self] message in self?.showMessage(message, tone: .danger) })
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)
     @ObservationIgnored private(set) lazy var updateCoordinator = UpdateCoordinator(
@@ -534,6 +537,7 @@ final class AppCore {
     }
 
     func prepareForTermination() {
+        excalidrawCoordinator.stop()
         confettiCoordinator.stop()
         settingsFile?.flush()
         clipboardTextIndexer?.stop()

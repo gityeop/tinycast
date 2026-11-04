@@ -5,6 +5,41 @@ Oncast releases use `oncast-vMAJOR.MINOR.PATCH` tags on `gityeop/tinycast`, with
 and Developer ID signed DMG and ZIP assets. ZIPs power the in-app updater starting in 0.1.1.
 The local DMG command below packages Oncast; the remaining release channels describe upstream Tinycast.
 
+## Oncast license and source delivery
+
+The app bundles LICENSE (AGPL-3.0-or-later), SOURCE_CODE.md, NOTICE.md and the Excalidraw third-party
+license file. About has links to these documents. Do not replace the AGPL terms with a restrictive EULA.
+
+`script/build_release.sh` generates the Xcode project, snapshots the current source, then builds the app.
+It writes `Oncast-source-<git-tree-id>.tar.gz` and a `.sha256` file into `build/release/`. The snapshot
+includes tracked files and non-ignored new files, so local changes such as the embedded editor are
+included. It uses a temporary Git index and leaves the real staging area unchanged. Build output,
+node_modules and ignored local files are excluded. Do not place private files in tracked or non-ignored
+source paths, and do not edit the source while the release build is running.
+
+For a separate local build, generate the project and create its source archive immediately before
+building, without editing files between the two steps:
+
+```sh
+xcodegen generate
+./Scripts/package-source.sh build/source
+# Build the app from this same working tree; see FORK.md.
+```
+
+Extracting the archive gives an `Oncast-source/` folder. Follow its FORK.md to build the app. The
+generated editor resources are included; rebuilding those resources uses the pinned npm dependencies
+and instructions in Scripts/excalidraw/README.md.
+
+Before publishing, inspect the source archive, verify its checksum with `shasum -a 256 -c <file>.sha256`,
+and attach both files to the same release as the DMG and app ZIP. Include a direct source-archive link
+in the approved release notes. Keep the archive available while offering the binary. A link to the
+repository's current branch, or GitHub's automatically generated source archive for an older commit,
+does not identify a working-tree build's matching source. Source archives use `.tar.gz` because the
+Oncast updater treats `.zip` release assets as app updates.
+
+This procedure prepares local artifacts. Uploading source, publishing a release and replacing the
+installed app are separate actions.
+
 The 0.1.4 release also ships the separately installed API Keys extension as
 `Oncast-API-Keys-1.1.0-arm64.tar.gz`. Its signed and notarized `OncastKeychain.app` stores keys in the
 user's protected macOS Keychain; no user keys or migration inputs belong in this archive. Extract it

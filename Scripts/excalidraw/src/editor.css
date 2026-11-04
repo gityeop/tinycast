@@ -1,0 +1,24 @@
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: light-dark(#fff, #121212);
+}
+
+html { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
+#editor-error {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 48px);
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: light-dark(#f1f0ff, #302d47);
+  color: light-dark(#343047, #f0edff);
+  font: 13px -apple-system, BlinkMacSystemFont, sans-serif;
+}

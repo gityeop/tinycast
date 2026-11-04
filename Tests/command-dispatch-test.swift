@@ -85,6 +85,10 @@ struct CommandDispatchTests {
         coordinator.runCommand(.showNotes, reveal: true)
         check("Notes links show rather than toggle", notes.calls == ["toggle", "show"])
         core.quickActionCoordinator.calls = []
+        core.excalidrawCoordinator.calls = []
+        coordinator.runCommand(.excalidraw)
+        coordinator.runCommand(.excalidraw, reveal: true)
+        check("Excalidraw always opens its internal window", core.excalidrawCoordinator.calls == ["show", "show"])
         coordinator.runCommand(.fixGrammar, reveal: true)
         check("a built-in quick action uses its coordinator", core.quickActionCoordinator.calls == ["fixGrammar"])
 
@@ -184,6 +188,7 @@ final class DispatchProbe {
     func showSnippets(reveal: Bool) { show(reveal: reveal) }
     func showRooms(reveal: Bool) { show(reveal: reveal) }
     func toggle() { calls.append("toggle") }
+    func show() { calls.append("show") }
     func run(_ action: BuiltInQuickAction) { calls.append(action.rawValue) }
     func run(id: UUID) {}
     func showWindow() { calls.append("showWindow") }
@@ -260,6 +265,7 @@ final class AppCore {
     let quickActionCoordinator = DispatchProbe()
     let clipboardCoordinator = DispatchProbe()
     let cameraCoordinator = DispatchProbe()
+    let excalidrawCoordinator = DispatchProbe()
     let confettiCoordinator = DispatchProbe()
     let dictionaryCoordinator = DispatchProbe()
     let roomCoordinator = DispatchProbe()

@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import SwiftUI
 
 struct AboutView: View {
@@ -140,33 +141,75 @@ private struct AboutLink: Identifiable {
     let glyph: Glyph
     let title: String
     let detail: String
-    let url: URL
+    let destination: Destination
+
+    enum Destination {
+        case website(URL)
+        case document(String)
+    }
+
+    func open() throws {
+        let url: URL
+        switch destination {
+        case .website(let address):
+            url = address
+        case .document(let path):
+            guard let resource = Bundle.main.resourceURL?.appendingPathComponent(path),
+                FileManager.default.fileExists(atPath: resource.path)
+            else { throw CocoaError(.fileNoSuchFile) }
+            url = resource
+        }
+        guard NSWorkspace.shared.open(url) else { throw CocoaError(.fileReadUnknown) }
+    }
 
     static let all: [AboutLink] = [
         AboutLink(
             id: "website", glyph: .symbol("globe"), title: "Website",
             detail: "byyeop.com",
-            url: URL(string: "https://byyeop.com")!),
+            destination: .website(URL(string: "https://byyeop.com")!)),
         AboutLink(
             id: "github", glyph: .brand("BrandGitHub"), title: "GitHub",
-            detail: "Oncast source code",
-            url: URL(string: "https://github.com/gityeop/tinycast/tree/native-deeplinks")!),
+            detail: "Oncast repository",
+            destination: .website(URL(string: "https://github.com/gityeop/tinycast")!)),
+        AboutLink(
+            id: "source", glyph: .symbol("chevron.left.forwardslash.chevron.right"), title: "Source Code & Terms",
+            detail: "How to get this version's source",
+            destination: .document("SOURCE_CODE.md")),
+        AboutLink(
+            id: "license", glyph: .symbol("doc.text"), title: "Open Source License",
+            detail: "AGPL-3.0-or-later",
+            destination: .document("LICENSE")),
+        AboutLink(
+            id: "notices", glyph: .symbol("text.book.closed"), title: "Third-Party Notices",
+            detail: "Copyright and attribution",
+            destination: .document("NOTICE.md")),
+        AboutLink(
+            id: "editor-licenses", glyph: .symbol("pencil.and.outline"), title: "Excalidraw Licenses",
+            detail: "Editor, libraries and fonts",
+            destination: .document("Excalidraw/THIRD-PARTY-LICENSES.txt")),
         AboutLink(
             id: "feedback", glyph: .symbol("bubble.left.and.bubble.right"), title: "Feedback",
             detail: "Issues and feedback",
-            url: URL(string: "https://github.com/gityeop/tinycast/issues")!)
+            destination: .website(URL(string: "https://github.com/gityeop/tinycast/issues")!))
     ]
 }
 
 /// A row in the About "Links" card: glyph, title, destination and the arrow.
 private struct AboutLinkRow: View {
+    @Environment(AppCore.self) private var core
     let link: AboutLink
 
     @State private var hovered = false
 
     var body: some View {
         Button {
-            NSWorkspace.shared.open(link.url)
+            do {
+                try link.open()
+            } catch {
+                Logger(subsystem: "com.gityeop.tinycast", category: "About")
+                    .error("Could not open \(link.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                core.showMessage("Couldn’t open this document or link.", tone: .danger)
+            }
         } label: {
             LabeledContent {
                 HStack(spacing: Theme.Spacing.sm) {
