@@ -110,7 +110,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `app-name-test` | `Platform/AppDisplayName.swift` — every path that names a scanned bundle |
 | `calc-test` | all of `Calculator/Model/` |
 | `excalidraw-test` | Bundled editor rendering, compact chrome, appearance changes, and drawing persistence across recreation and reload |
-| `Scripts/test-canvas-mcp.sh` | Real MCP helper and editor through the official client SDK, mutations, exports and concurrent revision conflicts |
+| `Scripts/test-canvas-mcp.sh` | Real MCP helper and editor through the official SDK and Oncast's native client/tool loop; built-in registration, consent, disabled external servers, mutations, exports and revision conflicts |
 | `calendar-test` | all of `Calendar/Model/` plus `EventEditorSession` — links, join window, day buckets, draft and form focus |
 | `clipboard-search-test` | Ordinary and OCR result ordering, opt-in lifecycle, cancellation, pins and type filters |
 | `clipboard-text-test` | Apple Vision/PDF extraction, scheduling, retry backoff and recovery |

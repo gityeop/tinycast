@@ -16,5 +16,19 @@ swiftc -swift-version 6 \
     Tinycast/Features/Excalidraw/ExcalidrawWindowChrome.swift \
     Tinycast/Windows/WindowChrome.swift Tests/excalidraw-test.swift \
     -o "$CANVAS_TEST_DIRECTORY/CanvasTestHost"
+swiftc -swift-version 6 \
+    Tinycast/Platform/ExecutableLocator.swift Tinycast/Platform/ProcessExit.swift \
+    Tinycast/Platform/KeychainSecretStore.swift Tinycast/Features/Settings/AppSettingsKey.swift \
+    Tinycast/Features/AI/Model/AIConnection.swift Tinycast/Features/AI/Model/AppleIntelligence.swift \
+    Tinycast/Features/AI/Model/AITool.swift Tinycast/Features/AI/Model/AIToolServer.swift \
+    Tinycast/Features/AI/Model/AIStreamDecoder.swift Tinycast/Features/AI/Model/AIProviderFailure.swift \
+    Tinycast/Features/AI/Model/AIThinkTagDecoder.swift Tinycast/Features/AI/Model/AIRequest.swift \
+    Tinycast/Features/AI/Model/JSONValue.swift Tinycast/Features/AI/Service/AIProvider.swift \
+    Tinycast/Features/AI/Service/AIToolLoopProvider.swift \
+    Tinycast/Features/MCP/Model/*.swift Tinycast/Features/MCP/Service/*.swift \
+    Tinycast/Features/MCP/Settings/MCPSettingsStore.swift Tinycast/Features/MCP/UI/MCPCoordinator.swift \
+    Tinycast/Features/Excalidraw/CanvasMCPServer.swift Tests/canvas-mcp-client-test.swift \
+    -o "$CANVAS_TEST_DIRECTORY/CanvasClientTest"
 node Scripts/excalidraw/test-mcp.mjs \
-    "$CANVAS_TEST_DIRECTORY/OncastCanvasMCP" "$CANVAS_TEST_DIRECTORY/CanvasTestHost" "$CANVAS_TEST_DIRECTORY/run"
+    "$CANVAS_TEST_DIRECTORY/OncastCanvasMCP" "$CANVAS_TEST_DIRECTORY/CanvasTestHost" \
+    "$CANVAS_TEST_DIRECTORY/run" "$CANVAS_TEST_DIRECTORY/CanvasClientTest"

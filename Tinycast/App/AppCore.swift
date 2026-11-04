@@ -69,7 +69,8 @@ final class AppCore {
     let aiSettings = AISettingsStore(
         environmentStore: .keychain,
         isAppleIntelligenceAvailable: { AppleIntelligenceProvider.status().isAvailable })
-    let mcpSettings = MCPSettingsStore()
+    let mcpSettings = MCPSettingsStore(builtInServer: CanvasMCPServer.make(
+        helperURL: Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/OncastCanvasMCP")))
     let mcpOAuth = MCPOAuthManager()
     @ObservationIgnored private(set) lazy var mcp = MCPServerManager(oauth: mcpOAuth)
     let quickActionSettings = QuickActionSettingsStore()

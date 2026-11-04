@@ -27,6 +27,7 @@ struct MCPTests {
         trustDecidesFromStandingAndChatGrants()
         addressingTakesOnlyAKnownHandle()
         settingsPersistAndKeepHandlesApart()
+        builtInCanvasRegistersAndRetainsItsPermissions()
         serversBecomeWhatACLICanRunItself()
         onlyOneCopyOfALocalServerRuns()
 
@@ -238,6 +239,35 @@ struct MCPTests {
 
         store.remove(id: edited.id)
         expect(store.servers.count == 1, "removal takes exactly one")
+    }
+
+    static func builtInCanvasRegistersAndRetainsItsPermissions() {
+        let suite = "mcp-canvas-test-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let first = CanvasMCPServer.make(helperURL: URL(filePath: "/First Oncast.app/Contents/Helpers/OncastCanvasMCP"))
+        let store = MCPSettingsStore(defaults: defaults, builtInServer: first)
+        expect(store.servers.count == 1, "the built-in canvas appears without manual registration")
+        expect(store.isBuiltIn(first.id), "the canvas is identified as app-managed")
+        expect(store.server(id: first.id)?.trust == .ask, "automatic connection still asks before its first call")
+        store.save(MCPServer(name: "External", transport: .http(url: "https://example.com/mcp", headerName: "")))
+        expect(
+            store.enabledServers(externalEnabled: false).map(\.id) == [first.id],
+            "turning off external servers leaves only the built-in canvas available")
+        expect(store.enabledServers(externalEnabled: true).count == 2, "external servers still follow their switch")
+        var edited = first
+        edited.isEnabled = false
+        edited.trust = .never
+        edited.transport = .stdio(command: "/bin/sh", arguments: [], environmentKeys: [])
+        store.save(edited)
+        expect(store.server(id: first.id)?.transport == first.transport, "editing cannot replace the built-in command")
+        let second = CanvasMCPServer.make(helperURL: URL(filePath: "/Updated Oncast.app/Contents/Helpers/OncastCanvasMCP"))
+        let reloaded = MCPSettingsStore(defaults: defaults, builtInServer: second)
+        let canvas = reloaded.server(id: second.id)
+        expect(reloaded.servers.count == 2, "relaunching keeps external servers and adds no duplicate canvas")
+        expect(canvas?.transport == second.transport, "a moved app uses its current bundled helper")
+        expect(canvas?.isEnabled == false && canvas?.trust == .never, "relaunching keeps the user's canvas permissions")
+        expect(reloaded.enabledServers(externalEnabled: false).isEmpty, "a disabled canvas is not offered to AI")
     }
 
     /// The same servers, shaped for the routes whose own client runs them.

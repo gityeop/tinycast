@@ -5,14 +5,23 @@ import Observation
 @Observable
 final class MCPSettingsStore {
     private let defaults: UserDefaults
+    private let builtInServer: MCPServer?
 
     private(set) var servers: [MCPServer] {
         didSet { persist() }
     }
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, builtInServer: MCPServer? = nil) {
         self.defaults = defaults
+        self.builtInServer = builtInServer
         servers = Self.decode(defaults.data(forKey: AppSettingsKey.mcpServers.rawValue))
+        if var builtInServer {
+            if let saved = server(id: builtInServer.id) {
+                builtInServer.isEnabled = saved.isEnabled
+                builtInServer.trust = saved.trust
+            }
+            save(builtInServer)
+        }
     }
 
     func server(id: UUID) -> MCPServer? {
@@ -23,8 +32,10 @@ final class MCPSettingsStore {
         servers.first { $0.slug == slug }
     }
 
-    var enabledServers: [MCPServer] {
-        servers.filter(\.isEnabled)
+    func isBuiltIn(_ id: UUID) -> Bool { id == builtInServer?.id }
+
+    func enabledServers(externalEnabled: Bool) -> [MCPServer] {
+        servers.filter { $0.isEnabled && (externalEnabled || isBuiltIn($0.id)) }
     }
 
     func save(_ server: MCPServer) {
@@ -48,6 +59,11 @@ final class MCPSettingsStore {
     /// A slug is derived, never typed, so `@handle` can never name two servers or nothing at all.
     private func normalized(_ server: MCPServer) -> MCPServer {
         var server = server
+        if var managed = builtInServer, server.id == managed.id {
+            managed.isEnabled = server.isEnabled
+            managed.trust = server.trust
+            server = managed
+        }
         server.name = server.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let taken = Set(servers.filter { $0.id != server.id }.map(\.slug))
         let derived = MCPSlug.normalize(server.name.isEmpty ? server.slug : server.name)

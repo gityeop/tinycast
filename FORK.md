@@ -57,6 +57,7 @@ compact titlebar, an uncluttered canvas, local drawing storage, and file import/
 `oncast://command/excalidraw`. See [Excalidraw](docs/features/excalidraw.md).
 The editor menu can copy a local MCP connection entry. Its bundled native helper lets agents read,
 edit and render the open canvas, with revision checks and atomic changes.
+Oncast's own tool-capable AI chats get an automatic **Oncast Canvas** connection in Settings → AI → MCP.
 
 Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` or set
 `DEVELOPER_DIR` to its `Contents/Developer` directory, then run:

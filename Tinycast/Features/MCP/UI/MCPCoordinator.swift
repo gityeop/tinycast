@@ -22,7 +22,13 @@ final class MCPCoordinator {
         self.core = core
     }
 
-    var isActive: Bool { settings.aiEnabled && settings.mcpEnabled }
+    var isActive: Bool {
+        settings.aiEnabled && (settings.mcpEnabled || !enabledServers.isEmpty)
+    }
+
+    private var enabledServers: [MCPServer] {
+        store.enabledServers(externalEnabled: settings.mcpEnabled)
+    }
 
     /// Off means off: no connection, no resident process, and nothing offered to a model.
     func applyEnabled() {
@@ -32,12 +38,13 @@ final class MCPCoordinator {
             manager.stop()
             return
         }
+        if !settings.mcpEnabled { core.mcpOAuth.stop() }
         manager.reconcile(ownServers)
     }
 
     /// The Codex helper keeps what it was launched with, so a server taken away is taken from it.
     private func dropWithdrawnServers(besides withdrawn: UUID? = nil) {
-        let offered = store.enabledServers.filter { $0.trust != .never && $0.id != withdrawn }
+        let offered = enabledServers.filter { $0.trust != .never && $0.id != withdrawn }
         core.chatGPTSubscription.dropWithdrawnServers(
             keeping: isActive ? Set(offered.map(\.slug)) : [])
     }
@@ -51,23 +58,23 @@ final class MCPCoordinator {
     /// What Tinycast runs itself; Codex and Claude start their own copy of every local server.
     private var ownServers: [MCPServer] {
         let cliRoute = core.aiChatCoordinator.everyChatRunsItsOwnTools
-        return store.enabledServers.filter { $0.runsInTinycast(whileCLIRouteSelected: cliRoute) }
+        return enabledServers.filter { $0.runsInTinycast(whileCLIRouteSelected: cliRoute) }
     }
 
     var slugs: Set<String> {
         guard isActive else { return [] }
-        return Set(store.enabledServers.map(\.slug))
+        return Set(enabledServers.map(\.slug))
     }
 
     /// What a chat's tools menu lists; empty while MCP is off.
     var servers: [MCPServer] {
         guard isActive else { return [] }
-        return store.enabledServers
+        return enabledServers
     }
 
     func server(slug: String) -> MCPServer? {
         guard isActive else { return nil }
-        return store.enabledServers.first { $0.slug == slug }
+        return enabledServers.first { $0.slug == slug }
     }
 
     /// What this turn may reach: everything enabled, or one server when `@slug` named it.
@@ -76,7 +83,8 @@ final class MCPCoordinator {
         return manager.tools
             .filter { tool in
                 guard slug == nil || tool.serverSlug == slug else { return false }
-                return store.server(id: tool.serverID)?.trust != .never
+                guard let server = server(slug: tool.serverSlug), server.id == tool.serverID else { return false }
+                return server.trust != .never
             }
             .map(\.aiTool)
     }
@@ -86,7 +94,7 @@ final class MCPCoordinator {
         guard isActive else { return [] }
         let secrets = MCPSecretStore()
         var result: [AIToolServer] = []
-        for server in store.enabledServers
+        for server in enabledServers
         where server.trust != .never && (slug == nil || server.slug == slug) {
             let stored = secrets.secrets(for: server.id)
             var bearer: String?
@@ -143,8 +151,18 @@ final class MCPCoordinator {
 
     func status(of id: UUID) -> MCPServerStatus { manager.status(of: id) }
 
+    func statusLabel(for server: MCPServer) -> String {
+        if server.trust == .never { return "Not allowed" }
+        if isActive, enabledServers.contains(where: { $0.id == server.id }),
+            !server.runsInTinycast(whileCLIRouteSelected: core.aiChatCoordinator.everyChatRunsItsOwnTools)
+        {
+            return "Ready in chat"
+        }
+        return status(of: server.id).label
+    }
+
     func save(_ server: MCPServer, secrets: MCPSecretStore.Secrets) throws {
-        try MCPSecretStore().save(secrets, for: server.id)
+        if !store.isBuiltIn(server.id) { try MCPSecretStore().save(secrets, for: server.id) }
         core.mcpOAuth.cancelSignIn(server.id)
         manager.disconnect(server.id)
         store.save(server)
@@ -207,8 +225,11 @@ final class MCPCoordinator {
         let choices: [MCPTrustChoice] = [.always, .thisChat, .refuse]
         let index = await core.choose(
             title: "Let \(server.title) run its tools?",
-            message: "The model wants to call \u{201C}\(tool)\u{201D}. Oncast did not write this "
-                + "server and cannot vouch for what it does.",
+            message: store.isBuiltIn(server.id)
+                ? "The model wants to call \u{201C}\(tool)\u{201D} on your open canvas. "
+                    + "Canvas changes can be undone in Excalidraw."
+                : "The model wants to call \u{201C}\(tool)\u{201D}. Oncast did not write this "
+                    + "server and cannot vouch for what it does.",
             symbol: "wrench.and.screwdriver",
             options: [
                 DialogAction(title: "Always Allow"),

@@ -32,6 +32,13 @@ The bundled component has no cloud account or real-time collaboration backend.
 
 ## Local AI agent access
 
+Settings → AI → MCP automatically lists **Oncast Canvas** (`@oncast-canvas`). With AI enabled,
+tool-capable chats can read and edit the open canvas without adding a server. Codex, Claude and
+API routes use this connection; Apple Intelligence and the other routes without tool support do not.
+The external MCP switch controls only user-added servers. The built-in row lets users disable tools,
+choose trust or test the connection; its command is managed by the app. Consent is requested before
+the first tool call in each chat unless the user has chosen Always Allow.
+
 Open the editor's menu and choose **AI 에이전트 연결 설정 복사**. Register the copied server entry in a
 local MCP client's settings. It launches the bundled native `Contents/Helpers/OncastCanvasMCP`
 executable over stdio; Node.js and an API key are not needed to run the server. Use the path copied

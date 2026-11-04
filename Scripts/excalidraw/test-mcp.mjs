@@ -7,7 +7,7 @@ import { createInterface } from "node:readline";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const [helper, hostExecutable, directory] = process.argv.slice(2);
+const [helper, hostExecutable, directory, internalClient] = process.argv.slice(2);
 const socket = resolve(directory, "socket");
 await mkdir(directory, { recursive: true, mode: 0o700 });
 const host = spawn(hostExecutable, [], {
@@ -177,6 +177,16 @@ try {
   const permissions = (await import("node:fs/promises")).stat;
   assert.equal((await permissions(socket)).mode & 0o777, 0o600);
   check("the socket is accessible only to its owning user");
+  const internal = spawn(internalClient, [helper, socket], { stdio: ["ignore", "pipe", "pipe"] });
+  let internalOutput = "";
+  internal.stdout.on("data", (data) => { internalOutput += data.toString(); });
+  internal.stderr.on("data", (data) => { internalOutput += data.toString(); });
+  const internalExit = await new Promise((resolve, reject) => {
+    internal.once("error", reject);
+    internal.once("exit", resolve);
+  });
+  assert.equal(internalExit, 0, internalOutput);
+  console.log(internalOutput.trim());
 } catch (error) {
   console.error(diagnostics);
   throw error;
