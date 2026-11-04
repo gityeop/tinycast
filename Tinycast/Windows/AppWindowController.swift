@@ -12,6 +12,7 @@ private final class AppWindow: NSWindow {
 /// Built on first show, torn down on close so its SwiftUI tree deallocates. Never quits the app.
 @MainActor
 final class AppWindowController: NSObject, NSWindowDelegate {
+    var onClose: (() -> Void)?
     private let title: String
     private let contentSize: CGSize
     private let minimumSize: CGSize
@@ -99,6 +100,7 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         self.window = nil
         self.chrome = nil
         activation.windowDidClose(window)
+        onClose?()
     }
 
     // MARK: - Private

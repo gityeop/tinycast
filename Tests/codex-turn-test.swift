@@ -217,7 +217,8 @@ struct CodexTurnTests {
                 let parameters = server.parameters("thread").last ?? [:]
                 let instructions = parameters["developerInstructions"]?.stringValue ?? ""
                 expect(parameters["ephemeral"]?.boolValue == true, "threads keep research in memory")
-                expect(instructions.contains("Never execute commands, read local files"), "local access stays forbidden")
+                expect(instructions.contains("Direct shell and filesystem") && instructions.contains("native approval"),
+                       "direct shell access stays outside chat while native approved setup is available")
                 expect(
                     instructions.contains("Never invoke tools") == (!search && !hasTools),
                     "only a turn with no tools forbids every tool")

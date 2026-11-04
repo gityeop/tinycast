@@ -619,7 +619,7 @@ struct InstalledAITests {
     private static func concurrentCallsAreAskedOneAtATime(_ fixture: Fixture) async {
         let reader = GrantingReader()
         let session = AIToolServerSession(rounds: 25) {
-            await fixture.session(allowing: true, asked: Box()).servers()
+            try await fixture.session(allowing: true, asked: Box()).servers()
         } consent: { call in
             await reader.answer(call)
         }

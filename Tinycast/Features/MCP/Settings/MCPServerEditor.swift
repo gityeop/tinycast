@@ -1,8 +1,12 @@
 import SwiftUI
+import OSLog
 
 struct MCPServerEditorTarget: Identifiable {
     let server: MCPServer
     let isNew: Bool
+    var proposal: MCPInstallProposal?
+    var sources: [URL] = []
+    var installationRoot: URL?
     var id: UUID { server.id }
 }
 
@@ -12,6 +16,7 @@ struct MCPServerEditor: View {
     let target: MCPServerEditorTarget
     let onSave: (MCPServer, MCPSecretStore.Secrets) -> String?
     let onCancel: () -> Void
+    let onInstall: ((MCPServer, MCPSecretStore.Secrets) async throws -> Void)?
 
     private enum Kind: String, CaseIterable, Identifiable {
         case http
@@ -50,11 +55,13 @@ struct MCPServerEditor: View {
     init(
         target: MCPServerEditorTarget,
         onSave: @escaping (MCPServer, MCPSecretStore.Secrets) -> String?,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onInstall: ((MCPServer, MCPSecretStore.Secrets) async throws -> Void)? = nil
     ) {
         self.target = target
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onInstall = onInstall
         let server = target.server
         let secrets = target.isNew ? MCPSecretStore.Secrets() : MCPSecretStore().secrets(for: server.id)
         _usesOAuth = State(initialValue: server.oauth == true)
@@ -66,7 +73,8 @@ struct MCPServerEditor: View {
         _trust = State(initialValue: server.trust)
         _headerValue = State(initialValue: secrets.headerValue)
         _environmentText = State(
-            initialValue: secrets.environment.sorted { $0.key < $1.key }
+            initialValue: (target.proposal?.environmentKeys.reduce(into: [String: String]()) { $0[$1] = "" }
+                ?? secrets.environment).sorted { $0.key < $1.key }
                 .map { "\($0.key)=\($0.value)" }.joined(separator: "\n"))
         switch server.transport {
         case .http(let url, let headerName):
@@ -80,14 +88,14 @@ struct MCPServerEditor: View {
             _url = State(initialValue: "")
             _headerName = State(initialValue: MCPTransportKind.defaultHeaderName)
             _command = State(initialValue: command)
-            _argumentText = State(initialValue: arguments.joined(separator: " "))
+            _argumentText = State(initialValue: MCPCommandArguments.text(arguments))
         }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             SettingsEditorHeader(
-                title: target.isNew ? "Add MCP Server" : "Edit MCP Server"
+                title: target.proposal != nil ? "Review MCP Setup" : (target.isNew ? "Add MCP Server" : "Edit MCP Server")
             )
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.Spacing.dialogInset)
@@ -95,6 +103,20 @@ struct MCPServerEditor: View {
             .padding(.bottom, Theme.Spacing.xl)
 
             Form {
+                if let proposal = target.proposal {
+                    Section {
+                        ForEach(target.sources, id: \.self) { source in
+                            Link(source.absoluteString, destination: source)
+                        }
+                        Text(proposal.notes).textSelection(.enabled)
+                    } footer: {
+                        Text("Review the endpoint or command below. Approval enables MCP and may download and run "
+                            + "the listed server on this Mac. Credentials stay in Keychain and are not sent to the chat model.")
+                    }
+                    if let root = target.installationRoot {
+                        MCPInstallPlanView(plan: proposal.installation, root: root)
+                    }
+                }
                 Section {
                     field("Name") {
                         TextField("Name", text: $name, prompt: Text("GitHub"))
@@ -158,6 +180,12 @@ struct MCPServerEditor: View {
                             .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
                         }
                     }
+                    if kind == .http, let proposal = target.proposal, !proposal.environmentKeys.isEmpty {
+                        field("Service environment") {
+                            TextField("Service environment", text: $environmentText, axis: .vertical)
+                                .settingsEditorTextArea(height: Theme.Size.editorTextHeight)
+                        }
+                    }
                 } footer: {
                     Text(
                         kind == .http
@@ -171,17 +199,24 @@ struct MCPServerEditor: View {
                 }
 
                 Section {
-                    Toggle("Offer this server's tools", isOn: $isEnabled)
-                    field("Trust") {
-                        Picker("Trust", selection: $trust) {
-                            ForEach(MCPTrust.allCases) { Text($0.title).tag($0) }
+                    if target.proposal == nil {
+                        Toggle("Offer this server's tools", isOn: $isEnabled)
+                        field("Trust") {
+                            Picker("Trust", selection: $trust) {
+                                ForEach(MCPTrust.allCases) { Text($0.title).tag($0) }
+                            }
+                            .labelsHidden()
                         }
-                        .labelsHidden()
-                    }
-                    HStack(spacing: Theme.Spacing.lg) {
-                        Button("Test Connection", action: test)
-                            .disabled(operation != nil)
-                        probeLabel
+                        HStack(spacing: Theme.Spacing.lg) {
+                            Button("Test Connection", action: test)
+                                .disabled(operation != nil)
+                            probeLabel
+                        }
+                    } else if operation != nil {
+                        HStack {
+                            ProgressView().controlSize(.small)
+                            Text(coordinator.installationProgress(for: target.server.id) ?? "Connecting and testing…")
+                        }
                     }
                     if let error {
                         Text(error).foregroundStyle(.orange)
@@ -197,20 +232,21 @@ struct MCPServerEditor: View {
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
+            .disabled(target.proposal != nil && operation != nil)
 
             Divider()
             HStack(spacing: Theme.Spacing.md) {
                 Button("Cancel", action: onCancel)
                     .buttonStyle(.modalAction(.cancel))
                     .keyboardShortcut(.cancelAction)
-                Button("Save", action: save)
-                    .disabled(operation != nil)
+                Button(target.proposal == nil ? "Save" : "Approve & Set Up", action: save)
+                    .disabled(operation != nil || target.proposal?.installation.blockers.isEmpty == false)
                     .buttonStyle(.modalAction(.primary))
                     .keyboardShortcut(.defaultAction)
             }
             .padding(Theme.Spacing.dialogInset)
         }
-        .frame(width: 620, height: 560)
+        .frame(width: 620, height: target.proposal == nil ? 560 : 660)
         .settingsEditorPanelSurface()
         .onDisappear {
             operation?.cancel()
@@ -235,14 +271,18 @@ struct MCPServerEditor: View {
                     .settingsEditorTextField()
             }
             field("Sign-in") {
-                HStack(spacing: Theme.Spacing.lg) {
-                    switch authenticationStatus {
-                    case .signedIn: Button("Sign Out", action: signOut).disabled(operation != nil)
-                    case .signingIn: Button("Cancel", action: cancelOperation)
-                    default: Button("Sign In", action: signIn).disabled(operation != nil)
+                if target.proposal != nil {
+                    Text("Approval opens the server's sign-in page.").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    HStack(spacing: Theme.Spacing.lg) {
+                        switch authenticationStatus {
+                        case .signedIn: Button("Sign Out", action: signOut).disabled(operation != nil)
+                        case .signingIn: Button("Cancel", action: cancelOperation)
+                        default: Button("Sign In", action: signIn).disabled(operation != nil)
+                        }
+                        Text(authenticationStatus.label)
+                            .font(.caption).foregroundStyle(.secondary)
                     }
-                    Text(authenticationStatus.label)
-                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
@@ -336,6 +376,7 @@ struct MCPServerEditor: View {
                 headerName: headerName.trimmingCharacters(in: .whitespaces))
             server.oauth = usesOAuth ? true : nil
             var secrets = MCPSecretStore.Secrets(headerValue: usesOAuth ? "" : headerValue)
+            secrets.environment = environment
             if usesOAuth {
                 var credentials = MCPSecretStore().secrets(for: server.id).oauth ?? MCPOAuth.Credentials()
                 let supplied = supplied
@@ -356,7 +397,7 @@ struct MCPServerEditor: View {
             server.oauth = nil
             server.transport = .stdio(
                 command: command.trimmingCharacters(in: .whitespaces),
-                arguments: Self.arguments(from: argumentText),
+                arguments: MCPCommandArguments.parse(argumentText),
                 environmentKeys: environment.keys.sorted())
             return (server, MCPSecretStore.Secrets(environment: environment))
         }
@@ -390,10 +431,37 @@ struct MCPServerEditor: View {
             return
         }
         let draft = draft
+        if let onInstall {
+            error = nil
+            operation = Task {
+                defer { operation = nil }
+                do {
+                    try await onInstall(draft.server, draft.secrets)
+                } catch is CancellationError {
+                    return
+                } catch {
+                    Logger(subsystem: "com.gityeop.tinycast", category: "MCPSetup")
+                        .error("Approved MCP setup failed: \(error.localizedDescription, privacy: .private)")
+                    self.error = (error as? AIProviderError)?.errorDescription
+                        ?? "MCP setup failed. Check your connection and credentials before trying again."
+                }
+            }
+            return
+        }
         error = onSave(draft.server, draft.secrets)
     }
 
     private func validate() -> String? {
+        if let proposal = target.proposal {
+            if !proposal.environmentKeys.isEmpty {
+                let environment = Self.environment(from: environmentText)
+                let missing = proposal.environmentKeys.filter { environment[$0]?.isEmpty != false }
+                if !missing.isEmpty { return "Enter values for: " + missing.joined(separator: ", ") }
+            }
+            if kind == .http, proposal.authentication == .header, !usesOAuth, headerValue.isEmpty {
+                return "Enter the server's authentication header value."
+            }
+        }
         switch kind {
         case .http:
             do {
@@ -407,27 +475,6 @@ struct MCPServerEditor: View {
             break
         }
         return nil
-    }
-
-    /// Whitespace-separated, with quoting for the one argument that is a path holding a space.
-    private static func arguments(from text: String) -> [String] {
-        var arguments: [String] = []
-        var current = ""
-        var quote: Character?
-        for character in text {
-            if let open = quote {
-                if character == open { quote = nil } else { current.append(character) }
-            } else if character == "\"" || character == "'" {
-                quote = character
-            } else if character.isWhitespace {
-                if !current.isEmpty { arguments.append(current) }
-                current = ""
-            } else {
-                current.append(character)
-            }
-        }
-        if !current.isEmpty { arguments.append(current) }
-        return arguments
     }
 
     private static func environment(from text: String) -> [String: String] {

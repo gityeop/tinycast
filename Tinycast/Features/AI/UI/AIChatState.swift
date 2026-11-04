@@ -21,6 +21,7 @@ final class AIChatState {
     private let history: ChatHistoryStore
     @ObservationIgnored private var replyTask: Task<Void, Never>?
     @ObservationIgnored private var replyGeneration = 0
+    @ObservationIgnored private var pendingSetupReceipts: [ChatMessage] = []
     /// Deltas buffered between flushes, so the transcript re-renders per cadence, not per token.
     @ObservationIgnored private var pendingText = ""
     @ObservationIgnored private var pendingReasoning = ""
@@ -113,6 +114,13 @@ final class AIChatState {
                 self.finishLast(state: .failed, fallback: error.localizedDescription)
             }
         }
+    }
+
+    func recordSetupOutcome(_ outcome: MCPSetupOutcome) {
+        let receipt = outcome.receipt(messageID: UUID(), callID: UUID().uuidString)
+        if isStreaming { pendingSetupReceipts.append(receipt); return }
+        session.append(receipt)
+        history.save(session)
     }
 
     func report(_ message: String) {
@@ -333,6 +341,8 @@ final class AIChatState {
         isStreaming = false
         isThinking = false
         replyTask = nil
+        for receipt in pendingSetupReceipts { session.append(receipt) }
+        if !pendingSetupReceipts.isEmpty { history.save(session); pendingSetupReceipts = [] }
         if state == .complete { onReplyFinished?(self) }
     }
 

@@ -72,6 +72,8 @@ final class AppCore {
     let mcpSettings = MCPSettingsStore()
     let mcpOAuth = MCPOAuthManager()
     @ObservationIgnored private(set) lazy var mcp = MCPServerManager(oauth: mcpOAuth)
+    let mcpSetupTools = MCPSetupToolServer()
+    let mcpInstallations = MCPInstallationManager(root: AppPaths.applicationSupport().appending(path: "mcp-installations"))
     let quickActionSettings = QuickActionSettingsStore()
     let customQuickActions = CustomQuickActionStore()
     let chatGPTSubscription = ChatGPTSubscriptionManager()
@@ -549,6 +551,8 @@ final class AppCore {
         chatGPTSubscription.stop()
         mcpOAuth.stop()
         mcp.stop()
+        mcpSetupTools.stop()
+        mcpInstallations.stopAll()
         installedAI.stop()
     }
 

@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// Every row chord resolves to exactly the shortcut the old per-chord handlers answered.
 @main
@@ -36,6 +36,7 @@ struct PaletteShortcutTests {
     }
 
     static func main() {
+        horizontalArrowEditing()
         expect(resolve(nil, command: true, delete: true), .commandDelete, "⌘⌫ deletes the row")
         expect(resolve(nil, delete: true), nil, "a bare backspace stays with the field")
         expect(resolve(nil, control: true, delete: true), nil, "⌃⌫ is no row chord")
@@ -126,5 +127,35 @@ struct PaletteShortcutTests {
 
         print("\(passes) passed, \(failures) failed")
         if failures > 0 { exit(1) }
+    }
+
+    static func horizontalArrowEditing() {
+        NSApplication.shared.setActivationPolicy(.prohibited)
+        for delta in [-1, 1] {
+            let editor = NSTextView(frame: NSRect(x: 0, y: 0, width: 300, height: 40))
+            editor.string = "xkdl"
+            editor.setSelectedRange(NSRange(location: delta < 0 ? 4 : 0, length: 0))
+            var selection = 4
+            for _ in 0..<4 {
+                if PaletteShortcut.handlesHorizontalArrow(
+                    command: false, shift: true, option: false, control: false)
+                {
+                    selection += delta
+                } else if delta < 0 {
+                    editor.moveLeftAndModifySelection(nil)
+                } else {
+                    editor.moveRightAndModifySelection(nil)
+                }
+            }
+            expect(selection == 4, "Shift-arrow leaves the emoji grid selection unchanged")
+            expect(editor.selectedRange().length == 4, "Shift-arrow selects the owned search text")
+            editor.insertText("타이", replacementRange: NSRange(location: NSNotFound, length: 0))
+            expect(editor.string == "타이", "Hangul replaces xkdl instead of appending to it")
+            let previousSelection = selection
+            let navigates = PaletteShortcut.handlesHorizontalArrow(
+                command: false, shift: false, option: false, control: false)
+            for step in [delta, delta] where navigates { selection += step }
+            expect(selection == previousSelection + delta * 2, "plain and repeated arrows still navigate the emoji grid")
+        }
     }
 }

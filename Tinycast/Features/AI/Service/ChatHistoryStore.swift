@@ -88,6 +88,12 @@ final class ChatHistoryStore {
           duration REAL,
           PRIMARY KEY(message_id, position)
         );
+        CREATE TABLE IF NOT EXISTS mcp_setup_outcomes(
+          conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          source TEXT NOT NULL,
+          outcome TEXT NOT NULL,
+          PRIMARY KEY(conversation_id, source)
+        );
         CREATE INDEX IF NOT EXISTS messages_by_conversation
           ON messages(conversation_id, position);
         CREATE INDEX IF NOT EXISTS conversations_by_recency
@@ -348,6 +354,44 @@ final class ChatHistoryStore {
         guard removed > 0 else { return 0 }
         conversations.removeAll { $0.updatedAt < cutoff && !$0.isPinned }
         return removed
+    }
+
+    func recordMCPSetup(_ outcome: MCPSetupOutcome, in chat: UUID) throws {
+        guard ensureDatabase(), let database,
+            let statement = prepare("""
+                INSERT INTO mcp_setup_outcomes(conversation_id, source, outcome) VALUES(?, ?, ?)
+                ON CONFLICT(conversation_id, source) DO UPDATE SET outcome=excluded.outcome;
+                """, in: database) else {
+            throw AIProviderError.responseFailed("The MCP setup result could not be saved.")
+        }
+        defer { sqlite3_finalize(statement) }
+        bind(chat.uuidString, to: statement, at: 1)
+        bind(outcome.source.absoluteString, to: statement, at: 2)
+        guard let encoded = String(data: try JSONEncoder().encode(outcome), encoding: .utf8) else {
+            throw AIProviderError.malformedResponse
+        }
+        bind(encoded, to: statement, at: 3)
+        guard sqlite3_step(statement) == SQLITE_DONE else {
+            throw AIProviderError.responseFailed("The MCP setup result could not be saved.")
+        }
+    }
+
+    func mcpSetupOutcomes(in chat: UUID) throws -> [MCPSetupOutcome] {
+        guard ensureDatabase(), let database,
+            let statement = prepare("SELECT outcome FROM mcp_setup_outcomes WHERE conversation_id=? ORDER BY source;",
+                                    in: database) else {
+            throw AIProviderError.responseFailed("The MCP setup history could not be read.")
+        }
+        defer { sqlite3_finalize(statement) }
+        bind(chat.uuidString, to: statement, at: 1)
+        var outcomes: [MCPSetupOutcome] = []
+        var step = sqlite3_step(statement)
+        while step == SQLITE_ROW {
+            outcomes.append(try JSONDecoder().decode(MCPSetupOutcome.self, from: Data(text(statement, 0).utf8)))
+            step = sqlite3_step(statement)
+        }
+        guard step == SQLITE_DONE else { throw AIProviderError.responseFailed("The MCP setup history could not be read.") }
+        return outcomes
     }
 
     private func ensureDatabase() -> Bool {

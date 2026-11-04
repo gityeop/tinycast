@@ -3,8 +3,9 @@ import Foundation
 @MainActor
 final class CodexTurnRunner {
     private static let safetyInstructions = """
-        You are providing text generation inside Oncast. Never execute commands, read local files, \
-        inspect the environment, or modify files.
+        You are the assistant inside Oncast. Use the supplied tools for app actions.
+        Oncast's setup tools handle installation through native approval. Direct shell and filesystem
+        tools are not available in this chat.
         """
     private static let webSearchInstructions = """
         You may use web search when the answer depends on current or external information. For a \
@@ -263,7 +264,7 @@ final class CodexTurnRunner {
         let key = ObjectIdentifier(token)
         var tookOwnership = false
         do {
-            let servers = await toolServers?.servers() ?? []
+            let servers = try await toolServers?.servers() ?? []
             // The list is a launch fact, so `connect` may relaunch a server armed with another.
             let models = try await connect?(servers) ?? []
             // Discovery swallows errors, so a Stop that landed inside connect resurfaces here.

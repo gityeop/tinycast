@@ -320,25 +320,21 @@ private struct AIToolsPicker: View {
         let servers = coordinator.mcpServers
         let scope = chat.toolScope
         let takesTools = coordinator.capabilities(for: chat).tools
-        let active = servers.filter { scope.allows($0.slug) }.count
+        let active = servers.filter { scope.allows($0.slug) }.count + (scope.allows(MCPSetupTools.handle) ? 1 : 0)
         Menu {
-            if servers.isEmpty {
-                Text("No MCP servers are connected")
-            } else {
-                Toggle(
-                    "Use Tools",
-                    isOn: Binding(
-                        get: { scope.isEnabled },
-                        set: { coordinator.setToolsEnabled($0, in: chat) }))
+            Toggle("Use Tools", isOn: Binding(
+                get: { scope.isEnabled }, set: { coordinator.setToolsEnabled($0, in: chat) }))
+            Toggle("Oncast Setup", isOn: Binding(
+                get: { scope.allows(MCPSetupTools.handle) },
+                set: { _ in coordinator.toggleToolServer(MCPSetupTools.handle, in: chat) }))
+                .disabled(!scope.isEnabled)
+            if !servers.isEmpty {
                 Section("Servers") {
                     ForEach(servers) { server in
-                        Toggle(
-                            server.name.isEmpty ? server.slug : server.name,
-                            isOn: Binding(
-                                get: { scope.allows(server.slug) },
-                                set: { _ in coordinator.toggleToolServer(server.slug, in: chat) })
-                        )
-                        .disabled(!scope.isEnabled)
+                        Toggle(server.name.isEmpty ? server.slug : server.name, isOn: Binding(
+                            get: { scope.allows(server.slug) },
+                            set: { _ in coordinator.toggleToolServer(server.slug, in: chat) }))
+                            .disabled(!scope.isEnabled)
                     }
                 }
             }
@@ -346,7 +342,7 @@ private struct AIToolsPicker: View {
             Button("MCP Settings…", action: coordinator.showMCPSettings)
         } label: {
             Label(
-                servers.isEmpty || !scope.isEnabled ? "Tools" : "\(active) of \(servers.count)",
+                !scope.isEnabled ? "Tools" : "\(active) of \(servers.count + 1)",
                 systemImage: "wrench.and.screwdriver"
             )
             .labelStyle(.titleAndIcon)

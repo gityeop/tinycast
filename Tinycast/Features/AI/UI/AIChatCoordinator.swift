@@ -36,6 +36,7 @@ final class AIChatCoordinator {
     func applyEnabled() {
         appIndex.setCommandsVisible([.aiChat, .quickAI], settings.aiEnabled)
         guard settings.aiEnabled else {
+            core.mcpSetupTools.stop()
             for request in naming.values { request.cancel() }
             naming = [:]
             // Before the handle closes: cancelling an open reply saves the conversation it ends.
@@ -266,7 +267,7 @@ final class AIChatCoordinator {
             let sent = chat.send(
                 address.rest, using: try provider(for: chat, scopedTo: address.slug),
                 model: model(for: chat), webSearch: webSearch(for: chat),
-                instructions: instructions, contextBudget: contextBudget(for: chat),
+                instructions: try instructions(for: chat, scopedTo: address.slug), contextBudget: contextBudget(for: chat),
                 toolScope: address.slug)
             // Named while the answer streams, so the sidebar has a title before the reply ends.
             if sent { nameIfNeeded(chat) }
@@ -285,7 +286,7 @@ final class AIChatCoordinator {
             chat.regenerate(
                 using: try provider(for: chat, scopedTo: scope),
                 model: model(for: chat), webSearch: webSearch(for: chat),
-                instructions: instructions, contextBudget: contextBudget(for: chat))
+                instructions: try instructions(for: chat, scopedTo: scope), contextBudget: contextBudget(for: chat))
         } catch {
             chat.report(error.localizedDescription)
         }
@@ -295,10 +296,13 @@ final class AIChatCoordinator {
         core.aiSettings.webSearchEnabled && capabilities(for: chat).webSearch
     }
 
-    private var instructions: String? {
-        AIInstructions.compose(
-            userPrompt: core.aiSettings.systemPrompt,
-            isEnabled: core.aiSettings.systemPromptEnabled)
+    private func instructions(for chat: AIChatState, scopedTo slug: String?) throws -> String {
+        let prompt = AIInstructions.compose(
+            userPrompt: core.aiSettings.systemPrompt, isEnabled: core.aiSettings.systemPromptEnabled)
+        let available = capabilities(for: chat).tools && chat.toolScope.allows(MCPSetupTools.handle) && slug == nil
+        let state = try core.mcpCoordinator.setupContext(in: chat.session.id)
+        return [prompt, "Oncast setup tools available for this turn: \(available).\n" + state]
+            .compactMap { $0 }.joined(separator: "\n\n")
     }
 
     /// A turn's route and its tools: a CLI with its own client is handed servers, others the loop.
@@ -315,10 +319,20 @@ final class AIChatCoordinator {
         let excluded = chat.toolScope.excluded
         let chatID = chat.session.id
         let mcp = core.mcpCoordinator
-        return AIToolServerSession(rounds: core.aiSettings.toolRounds.limit) {
-            await mcp.toolServers(scopedTo: slug).filter { !excluded.contains($0.handle) }
+        return AIToolServerSession(rounds: core.aiSettings.toolRounds.limit) { [weak self] in
+            guard let self else { return [] }
+            var servers = await mcp.toolServers(scopedTo: slug).filter { !excluded.contains($0.handle) }
+            if slug == nil && !excluded.contains(MCPSetupTools.handle) {
+                let setup = try await self.core.mcpSetupTools.server(for: chatID) { [weak self] call in
+                    guard let self else { return .failure(call.id, "Oncast is no longer available.") }
+                    return await self.core.mcpCoordinator.invokeSetup(call, in: chatID)
+                }
+                servers.insert(setup, at: 0)
+            }
+            return servers
         } consent: { call in
-            await mcp.permit(call, in: chatID)
+            if call.handle == MCPSetupTools.handle { return true }
+            return await mcp.permit(call, in: chatID)
         }
     }
 
@@ -332,7 +346,8 @@ final class AIChatCoordinator {
         return AIToolLoopProvider(
             base: provider, tools: tools, maxRounds: core.aiSettings.toolRounds.limit
         ) { [mcp = core.mcpCoordinator] call in
-            await mcp.invoke(call, in: chatID)
+            if MCPSetupTools.owns(call.name) { return await mcp.invokeSetup(call, in: chatID) }
+            return await mcp.invoke(call, in: chatID)
         }
     }
 
@@ -340,7 +355,8 @@ final class AIChatCoordinator {
     private func tools(for chat: AIChatState, scopedTo slug: String?) -> [AITool] {
         guard chat.toolScope.isEnabled else { return [] }
         let excluded = chat.toolScope.excluded
-        return core.mcpCoordinator.tools(scopedTo: slug).filter { tool in
+        let setup = slug == nil && chat.toolScope.allows(MCPSetupTools.handle) ? MCPSetupTools.tools : []
+        return setup + core.mcpCoordinator.tools(scopedTo: slug).filter { tool in
             guard let route = MCPToolName.parse(tool.name) else { return true }
             return !excluded.contains(route.slug)
         }
@@ -355,6 +371,15 @@ final class AIChatCoordinator {
 
     func toggleToolServer(_ slug: String, in chat: AIChatState) {
         chat.toolScope.toggle(slug)
+    }
+
+    func recordSetupOutcome(_ outcome: MCPSetupOutcome, in id: UUID) {
+        if let chat = chats.holder(of: id) {
+            chat.recordSetupOutcome(outcome)
+        } else if var session = core.chatHistory.session(id: id) {
+            session.append(outcome.receipt(messageID: UUID(), callID: UUID().uuidString))
+            core.chatHistory.save(session)
+        }
     }
 
     func showMCPSettings() {
@@ -415,7 +440,7 @@ final class AIChatCoordinator {
             systemPrompt: core.aiSettings.systemPromptEnabled,
             webSearch: core.aiSettings.webSearchEnabled && can.webSearch,
             toolServers: can.tools && scope.isEnabled
-                ? mcpServers.count { scope.allows($0.slug) } : 0)
+                ? mcpServers.count { scope.allows($0.slug) } + (scope.allows(MCPSetupTools.handle) ? 1 : 0) : 0)
     }
 
     // MARK: - Attachments

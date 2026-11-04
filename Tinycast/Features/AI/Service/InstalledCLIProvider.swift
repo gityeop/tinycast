@@ -27,9 +27,9 @@ private final class InstalledCLITurnRunner {
         """
     /// The same boundary, for the one route that is handed tools: everything else stays off.
     private static let toolSafetyInstructions = """
-        You are generating text inside Oncast. The only tools you may use are the MCP tools \
-        supplied with this request. Do not read files, inspect the environment, access external \
-        resources, or modify anything else.
+        You are the assistant inside Oncast. Use the MCP tools supplied with this request.
+        Oncast's setup tools handle installation through native approval. Direct shell and filesystem
+        tools are not available in this chat.
         """
 
     private static var maximumPartialLineBytes: Int {
@@ -151,7 +151,10 @@ private final class InstalledCLITurnRunner {
             return
         }
 
-        activeServers = await resolvedToolServers()
+        do { activeServers = try await resolvedToolServers() } catch {
+            continuation.finish(throwing: error)
+            return
+        }
         let prompt = prompt(for: request)
         var configURL: URL?
         if !activeServers.isEmpty {
@@ -288,11 +291,11 @@ private final class InstalledCLITurnRunner {
     }
 
     /// What this turn may offer: nothing at all unless the route is Claude and MCP armed it.
-    private func resolvedToolServers() async -> [AIToolServer] {
+    private func resolvedToolServers() async throws -> [AIToolServer] {
         guard kind == .claude, let toolServers, !InstalledAIManager.hasManagedMCPPolicy else {
             return []
         }
-        return await toolServers.servers()
+        return try await toolServers.servers()
     }
 
     /// Nothing to call is one request; an armed turn takes the reader's cap, which may be none.

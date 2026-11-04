@@ -110,6 +110,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `app-name-test` | `Platform/AppDisplayName.swift` — every path that names a scanned bundle |
 | `calc-test` | all of `Calculator/Model/` |
 | `calendar-test` | all of `Calendar/Model/` plus `EventEditorSession` — links, join window, day buckets, draft and form focus |
+| `mcp-setup-test` | Native MCP setup tools over authenticated HTTP, independent per-server outcome persistence, public documentation discovery and grounded plans |
+| `mcp-installation-test` | Approved build steps, working folders and secrets, managed service readiness/restoration, real stdio and HTTP MCP handshakes, registration, occupied ports, failed builds and child-process cancellation |
 | `clipboard-search-test` | Ordinary and OCR result ordering, opt-in lifecycle, cancellation, pins and type filters |
 | `clipboard-text-test` | Apple Vision/PDF extraction, scheduling, retry backoff and recovery |
 | `paste-sequence-test` | `Clipboard/Model/PasteSequence.swift` — the walk's order, its end, and what starts it over |

@@ -5,8 +5,81 @@ tools to the model during a chat. A server is either a remote HTTP endpoint or a
 runs on this Mac; either way it advertises tools, Tinycast namespaces them by the server's handle,
 and the model calls what it wants. On an API route Tinycast is the MCP client; on the Codex and
 Claude routes the vendor CLI is, and Tinycast supplies the servers and answers for them.
-`Features/MCP/` owns servers and knows nothing about chat; [AI](ai.md) owns tool calling and knows
-nothing about MCP. `AIChatCoordinator.send` is the one place the two meet.
+`Features/MCP/` owns servers, setup models and installation; [AI](ai.md) owns conversational target
+selection, planning providers and tool calling. `AIChatCoordinator.send` routes setup requests between them.
+
+## Set up a server from a chat link
+
+Quick AI and AI Chat offer three native tools: read MCP documentation, review an installation plan,
+and read MCP status. The model uses the conversation and native state to decide when to call them.
+There is no phrase detector, installation-command regex, separate target classifier, or automatic
+switch based on a bare URL. Discovery uses the model's normal search capability; ambiguous choices
+stay in the conversation. The normal chat stream remains responsible for the reply.
+
+`MCPSetupTools` defines the same actions for API tool calling and CLI MCP clients.
+`MCPSetupToolServer`, owned by AppCore, exposes them over authenticated loopback HTTP for Codex and
+Claude. The credential stays in memory and is lent to the client through its existing transport.
+The native setup group is visible in the chat's tools picker and obeys its enabled state.
+The CLI endpoint is stable across conversations; each action uses conversation_id from native state
+so opening another chat does not replace the helper's server configuration. Native review is the
+execution consent, rather than a second generic tool-permission prompt.
+Submitting a review returns immediately. Oncast owns the approval queue and publishes a compact
+native result after installation, so user approval never waits inside a model or HTTP request. Turning AI off or
+quitting stops the endpoint and its pending calls.
+
+Documentation is read on an ephemeral connection and retained in memory for the conversation's
+review. The review action validates the proposed configuration against the actual pages the model
+read. Downloaded HTML permits 8 MiB before extracting readable content, so the observed Notion
+help page is not rejected at the former 1 MiB limit. Runtime inventory includes the installed Node
+version. A model can read additional linked documentation with the same read action.
+
+The review action queues `MCPServerEditor` and records approval pending. After approval, native
+installation and a real connection test run independently of the model turn. Native receipts use
+the chat's tool rows; if a reply is still streaming, the receipt is appended after it settles.
+Each native success or cancellation is saved to `mcp_setup_outcomes` in chat history immediately;
+a failed read/review action is recorded separately. These facts are independent of the assistant
+reply's complete/failed state. Every chat request carries registered servers and that conversation's
+recorded outcomes. A saved success whose server still exists is not installed again by the same
+conversation. Failed operations return tool errors, without silently changing server or transport.
+
+The plan shows one-time commands (checkout, runtime/dependency installation, build), managed background
+services with their local readiness ports, the final MCP command/endpoint and every working folder.
+Each command step has an exact documentation excerpt. Generated paths use `{install}`, resolved to a
+new private `mcp-installations/<server UUID>/` folder under Application Support. Missing repositories,
+source code, authentication requirements or other unresolved prerequisites appear as blockers and
+prevent approval. A placeholder repository such as `your-username/...` is not a substitute source.
+
+**Approve & Set Up** enables MCP and performs OAuth sign-in when needed, then runs the approved steps
+in order. Required secrets are collected in native fields and passed in process environments, never
+in model requests or installation records. Commands and all their children belong to a process
+session. Long-running services remain owned by Oncast; setup waits for each documented local TCP port
+before moving on. An occupied port fails without stopping its existing process.
+
+After preparation, a private launcher preserves the MCP working folder and exact argument boundaries
+for API, Codex and Claude routes. Oncast performs the real initialize/tools-list handshake and only
+then persists the approved installation and registers the server. HTTP and stdio use this same flow.
+New servers keep **Ask Each Chat** trust. Existing server records are never overwritten by setup.
+
+Approved records contain the plan and environment key names, not secret values. On later launches,
+only the record's background services are restored, without repeating checkout or build commands.
+Disabling AI/MCP, removing or withholding a server, or quitting Oncast stops its owned processes.
+Cancel/Stop during setup kills the active command session and its children and prevents registration.
+A failed command stops subsequent steps and is logged privately with known secrets redacted. Partial
+installation files remain for inspection; a new setup request creates a fresh folder. No alternate
+package, command, port or automatic retry is used after failure.
+
+The planner uses separate unsaved model turns with no tools or web search. The selected model must
+have enough context/output capacity for the documents and plan; oversized input is refused rather
+than silently truncated. Using the registered MCP still requires a tools-capable model route.
+
+`mcp-setup-test` covers routing, document discovery, grounded plans and approval boundaries.
+`mcp-installation-test` executes local fixtures through checkout/build, service readiness, real stdio
+and HTTP MCP handshakes, registration, service restoration, failures, occupied ports and cancellation.
+To also read real public GitHub, website and MCP Market documentation:
+
+```sh
+ONCAST_TEST_MCP_DOCS=1 ./Scripts/run-tests.sh mcp-setup-test
+```
 
 ## Invariants
 

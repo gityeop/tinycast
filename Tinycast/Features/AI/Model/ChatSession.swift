@@ -51,7 +51,9 @@ struct ChatSession: Equatable, Sendable {
 
     /// The turns a request may carry as history: a failed or unfinished reply never goes out.
     var historyMessages: [ChatMessage] {
-        messages.filter { $0.role == .user || $0.state == .complete }
+        messages.filter {
+            $0.role == .user || ($0.state == .complete && (!$0.text.isEmpty || !$0.images.isEmpty || !$0.documents.isEmpty))
+        }
     }
 
     /// Counted in the budget's own unit; past `textBudget` the oldest turns stop going out.

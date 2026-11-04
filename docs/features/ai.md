@@ -6,6 +6,13 @@ builds that chat's route through `AIProviderFactory` to stream an `AIRequest`.
 Chat is the first consumer and [Quick Actions](quick-actions.md) the second; the provider layer
 depends on neither, and Quick Actions carries its own route rather than borrowing this one.
 
+MCP setup uses the normal agent tool loop: the model can read documentation, submit a plan for
+native approval, and inspect native status. No user wording selects a separate provider.
+`MCPSetupTools` exposes the actions to API routes; `MCPSetupToolServer` supplies the same actions
+to Codex and Claude. Only native approval executes installation. Per-server outcomes are saved
+separately from streaming replies, so a later failure does not erase earlier successful actions.
+The model receives these native facts on later turns. See [MCP setup](mcp.md#set-up-a-server-from-a-chat-link).
+
 Chat has two surfaces over one history, as Raycast's does. **Quick AI** is the palette screen: Tab
 from the launcher asks what you typed, and the answer appears in place. **AI Chat** is a window —
 saved conversations in a sidebar on the left, the open one on the right, and a composer at the

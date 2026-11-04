@@ -671,6 +671,7 @@ run ai-chat-test           Tinycast/Features/AI/Model/AIRequest.swift \
                            Tinycast/Features/AI/Model/JSONValue.swift \
                            Tinycast/Features/AI/Model/ChatMessage.swift \
                            Tinycast/Features/AI/Model/ChatSession.swift \
+                           Tinycast/Features/AI/Model/MCPSetupOutcome.swift \
                            Tinycast/Features/AI/Model/ChatChoices.swift \
                            Tinycast/Features/AI/Model/ChatReferences.swift \
                            Tinycast/Features/AI/Model/ChatTitle.swift \
@@ -712,13 +713,35 @@ run chat-markdown-test     Tinycast/Platform/Appearance.swift \
                            Tinycast/Features/AI/UI/MathFont.swift \
                            Tinycast/Features/AI/UI/MathLayoutEngine.swift
 run mcp-test               Tinycast/Features/Settings/AppSettingsKey.swift \
+                           Tinycast/Features/AI/Model/AIRequest.swift \
                            Tinycast/Features/AI/Model/AIConnection.swift \
                            Tinycast/Features/AI/Model/AppleIntelligence.swift \
                            Tinycast/Features/AI/Model/AITool.swift \
                            Tinycast/Features/AI/Model/AIToolServer.swift \
                            Tinycast/Features/AI/Model/JSONValue.swift \
+                           Tinycast/Features/AI/Model/ChatReferences.swift \
                            Tinycast/Features/MCP/Model/*.swift \
                            Tinycast/Features/MCP/Settings/MCPSettingsStore.swift
+run mcp-setup-test         Tinycast/Features/AI/Model/AIRequest.swift \
+                           Tinycast/Features/AI/Model/AIConnection.swift \
+                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
+                           Tinycast/Features/AI/Model/AITool.swift \
+                           Tinycast/Features/AI/Model/AIToolServer.swift \
+                           Tinycast/Features/AI/Model/JSONValue.swift \
+                           Tinycast/Features/AI/Service/AIProvider.swift \
+                           Tinycast/Features/AI/Model/AIAttachmentPolicy.swift \
+                           Tinycast/Features/AI/Model/AIRetention.swift \
+                           Tinycast/Features/AI/Model/ChatMessage.swift \
+                           Tinycast/Features/AI/Model/ChatSession.swift \
+                           Tinycast/Features/AI/Model/MCPSetupOutcome.swift \
+                           Tinycast/Features/AI/Model/ChatChoices.swift \
+                           Tinycast/Features/AI/Model/ChatToolScope.swift \
+                           Tinycast/Features/AI/Service/ChatHistoryStore.swift \
+                           Tinycast/Features/AI/UI/AIChatState.swift \
+                           Tinycast/Features/AI/Model/ChatReferences.swift \
+                           Tinycast/Features/MCP/Model/*.swift \
+                           Tinycast/Features/MCP/Service/MCPDocumentationService.swift \
+                           Tinycast/Features/MCP/Service/MCPSetupToolServer.swift
 run -O text-diff-test      Tinycast/Features/QuickActions/Model/TextDiffEngine.swift
 run index text-diff-performance Tinycast/Features/QuickActions/Model/TextDiffEngine.swift
 run quick-action-test      Tinycast/Features/Settings/AppSettingsKey.swift \
@@ -732,7 +755,8 @@ run apple-intelligence-test Tinycast/Features/Settings/AppSettingsKey.swift \
                            Tinycast/Features/AI/Model/*.swift \
                            Tinycast/Features/AI/Service/AIProvider.swift \
                            Tinycast/Features/AI/Service/AppleIntelligenceProvider.swift
-run mcp-oauth-test         Tinycast/Platform/ExecutableLocator.swift \
+run mcp-oauth-test         Tinycast/Platform/PseudoTerminal.swift \
+                           Tinycast/Platform/ExecutableLocator.swift \
                            Tinycast/Platform/ProcessExit.swift \
                            Tinycast/Platform/KeychainSecretStore.swift \
                            Tinycast/Features/Settings/AppSettingsKey.swift \
@@ -745,9 +769,11 @@ run mcp-oauth-test         Tinycast/Platform/ExecutableLocator.swift \
                            Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
                            Tinycast/Features/AI/Model/AIRequest.swift \
                            Tinycast/Features/AI/Model/JSONValue.swift \
+                           Tinycast/Features/AI/Model/ChatReferences.swift \
                            Tinycast/Features/MCP/Model/*.swift \
                            Tinycast/Features/MCP/Service/*.swift
-run slow mcp-stdio-test    Tinycast/Platform/ExecutableLocator.swift \
+run slow mcp-stdio-test    Tinycast/Platform/PseudoTerminal.swift \
+                           Tinycast/Platform/ExecutableLocator.swift \
                            Tinycast/Platform/ProcessExit.swift \
                            Tinycast/Platform/KeychainSecretStore.swift \
                            Tinycast/Features/Settings/AppSettingsKey.swift \
@@ -760,8 +786,27 @@ run slow mcp-stdio-test    Tinycast/Platform/ExecutableLocator.swift \
                            Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
                            Tinycast/Features/AI/Model/AIRequest.swift \
                            Tinycast/Features/AI/Model/JSONValue.swift \
+                           Tinycast/Features/AI/Model/ChatReferences.swift \
                            Tinycast/Features/MCP/Model/*.swift \
                            Tinycast/Features/MCP/Service/*.swift
+run mcp-installation-test  Tinycast/Platform/PseudoTerminal.swift \
+                           Tinycast/Platform/ExecutableLocator.swift \
+                           Tinycast/Platform/ProcessExit.swift \
+                           Tinycast/Platform/KeychainSecretStore.swift \
+                           Tinycast/Features/Settings/AppSettingsKey.swift \
+                           Tinycast/Features/AI/Model/AIConnection.swift \
+                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
+                           Tinycast/Features/AI/Model/AITool.swift \
+                           Tinycast/Features/AI/Model/AIToolServer.swift \
+                           Tinycast/Features/AI/Model/AIStreamDecoder.swift \
+                           Tinycast/Features/AI/Model/AIProviderFailure.swift \
+                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Tinycast/Features/AI/Model/AIRequest.swift \
+                           Tinycast/Features/AI/Model/JSONValue.swift \
+                           Tinycast/Features/AI/Model/ChatReferences.swift \
+                           Tinycast/Features/MCP/Model/*.swift \
+                           Tinycast/Features/MCP/Service/*.swift \
+                           Tinycast/Features/MCP/Settings/MCPSettingsStore.swift
 run slow codex-turn-test   Tinycast/Platform/AppPaths.swift \
                            Tinycast/Features/AI/Model/*.swift \
                            Tinycast/Features/AI/Service/AIProvider.swift \

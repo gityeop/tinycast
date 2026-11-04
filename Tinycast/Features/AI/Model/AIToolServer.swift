@@ -23,14 +23,14 @@ struct AIToolServerCall: Equatable, Sendable {
 
 /// How a route whose own client runs the tool loop reaches Tinycast's servers and its reader.
 struct AIToolServerSession: Sendable {
-    let servers: @Sendable () async -> [AIToolServer]
+    let servers: @Sendable () async throws -> [AIToolServer]
     let consent: @Sendable (AIToolServerCall) async -> Bool
     /// The BYOK loop's bound, `nil` for none, applied to the CLI's own loop so a reply stops alike.
     let rounds: Int?
 
     init(
         rounds: Int?,
-        servers: @escaping @Sendable () async -> [AIToolServer],
+        servers: @escaping @Sendable () async throws -> [AIToolServer],
         consent: @escaping @Sendable (AIToolServerCall) async -> Bool
     ) {
         self.rounds = rounds

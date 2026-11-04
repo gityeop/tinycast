@@ -62,7 +62,11 @@ Requires macOS 26+, full Xcode, and XcodeGen. Select Xcode with `xcode-select` o
 The script regenerates the project, builds Debug, and launches `build/Build/Products/Debug/Oncast.app`.
 Optional modes are `--verify`, `--debug`, `--logs`, and `--telemetry`.
 The default signing identity is ad-hoc. To preserve macOS permission grants across rebuilds,
-set `TINYCAST_SIGNING_IDENTITY` and `TINYCAST_DEVELOPMENT_TEAM` to your signing identity and team.
+`script/build_and_run.sh` defaults to Developer ID Application: Sang Yeop Lim (79Q5RV23F9),
+the same identity as the installed Oncast. It verifies the signature before launching. Missing signing
+credentials fail the build; there is no automatic ad-hoc signing. Use `--build-only` to build and verify
+without launching or reading app credentials. Override `TINYCAST_SIGNING_IDENTITY` and
+`TINYCAST_DEVELOPMENT_TEAM` only when intentionally using another identity.
 Do not commit your signing credentials.
 
 ## Signed Release build
