@@ -54,6 +54,10 @@ struct NotesView: View {
             NoteEditorView(
                 input: notes.editorInput,
                 rendersMarkdown: notes.rendersMarkdown,
+                notesDirectory: notes.notesDirectory,
+                onImportImage: notes.importImage,
+                onImagePasteFailure: notes.imagePasteFailed,
+                onClipboardCopyFailure: notes.clipboardCopyFailed,
                 onSourceChange: notes.updateSource,
                 onCharacterCountChange: notes.updateCharacterCount,
                 onFormattingChange: notes.updateFormatting,

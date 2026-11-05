@@ -8,6 +8,12 @@ final class NoteLayoutFragmentProvider: NSObject, NSTextLayoutManagerDelegate {
         in textElement: NSTextElement
     ) -> NSTextLayoutFragment {
         let paragraph = (textElement as? NSTextParagraph)?.attributedString
+        if let paragraph, paragraph.length > 0,
+            let image = paragraph.attribute(.noteImage, at: 0, effectiveRange: nil)
+                as? NoteImageDecoration
+        {
+            return NoteImageLayoutFragment(textElement: textElement, decoration: image)
+        }
         guard let paragraph, paragraph.length > 0,
             let decoration = paragraph.attribute(.noteBlockDecoration, at: 0, effectiveRange: nil)
                 as? NoteBlockDecoration

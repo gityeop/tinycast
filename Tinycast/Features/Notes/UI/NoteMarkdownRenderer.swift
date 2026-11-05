@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 /// Keeps a note's parse and reveal state in step with its text view, restyling only what changed.
 @MainActor
@@ -7,6 +8,17 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
     private(set) var revealed = IndexSet()
     /// The Render Markdown setting; flipping it takes effect on the next `reset()`.
     var isEnabled: Bool
+    var notesDirectory: URL? {
+        didSet {
+            if notesDirectory != oldValue { images = [:] }
+        }
+    }
+    private enum ImageState {
+        case loading
+        case ready(NSImage)
+        case failed
+    }
+    private var images: [NoteImageReference: ImageState] = [:]
     weak var textView: NoteTextView? {
         didSet { textView?.textStorage?.delegate = self }
     }
@@ -26,6 +38,7 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
         NoteMarkdownStyler.invalidateColors()
         pendingEdit = nil
         guard isEnabled else {
+            images = [:]
             markdown = .empty
             revealed = []
             restyle(NSRange(location: 0, length: storage.length)) {
@@ -35,6 +48,7 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
             return
         }
         markdown = NoteMarkdownParser.parse(units: Self.units(of: storage))
+        retainCurrentImages()
         revealed = nextRevealed()
         apply(IndexSet(integersIn: markdown.lines.indices))
         textView.typingAttributes = NoteMarkdownStyler.literal
@@ -72,6 +86,7 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
         pendingEdit = nil
         let old = markdown
         markdown = NoteMarkdownParser.parse(units: Self.units(of: storage))
+        retainCurrentImages()
 
         let oldLines = old.lineIndexes(intersecting: edit.old)
         let newLines = markdown.lineIndexes(intersecting: edit.new)
@@ -162,9 +177,52 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
                     for run in style.runs {
                         textView.textStorage?.addAttributes(run.attributes, range: run.range)
                     }
+                    if case .image(let reference) = markdown.lines[index].kind,
+                        !revealed.contains(index), let image = image(for: reference)
+                    {
+                        let width = max(1, textView.bounds.width - 2 * textView.textContainerInset.width)
+                        let decoration = NoteImageDecoration(image: image, width: width)
+                        textView.textStorage?.setAttributes(
+                            decoration.attributes, range: markdown.lines[index].range)
+                    }
                 }
             }
         }
+    }
+
+    private func image(for reference: NoteImageReference) -> NSImage? {
+        if case .ready(let image) = images[reference] { return image }
+        guard images[reference] == nil, let directory = notesDirectory else { return nil }
+        images[reference] = .loading
+        Task { [weak self] in
+            let result = await Task.detached {
+                Result { try Data(contentsOf: reference.fileURL(in: directory)) }
+            }.value
+            guard let self, notesDirectory == directory, images[reference] != nil else { return }
+            do {
+                let data = try result.get()
+                guard let image = NSImage(data: data), image.size.width > 0, image.size.height > 0 else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                images[reference] = .ready(image)
+            } catch {
+                images[reference] = .failed
+                Logger(subsystem: "com.gityeop.tinycast", category: "Notes")
+                    .error("Couldn't load note image: \(error.localizedDescription, privacy: .private)")
+            }
+            apply(IndexSet(markdown.lines.indices.filter {
+                markdown.lines[$0].kind == .image(reference)
+            }))
+        }
+        return nil
+    }
+
+    private func retainCurrentImages() {
+        let references = Set(markdown.lines.compactMap { line -> NoteImageReference? in
+            guard case .image(let reference) = line.kind else { return nil }
+            return reference
+        })
+        images = images.filter { references.contains($0.key) }
     }
 
     /// Attribute writes skip `shouldChangeText`, which is what keeps styling off the undo stack.

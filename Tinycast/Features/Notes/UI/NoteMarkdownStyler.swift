@@ -47,7 +47,7 @@ enum NoteMarkdownStyler {
         let markerLook = isRevealed ? revealedMarker : hidden
 
         switch line.kind {
-        case .blank, .paragraph:
+        case .blank, .paragraph, .image:
             break
         case .heading(let level):
             base[.font] = NoteMarkdownTypography.heading(level)

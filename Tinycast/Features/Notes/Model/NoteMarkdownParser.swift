@@ -277,6 +277,9 @@ enum NoteMarkdownParser {
                 return wholeLine(.rule, range: range)
             }
             let first = indentEnd
+            if indentColumns <= 3, let image = imageReference {
+                return plain(.image(image), range: lineRange, contentStart: first)
+            }
             if indentColumns <= 3, let line = heading(range: lineRange, from: first) { return line }
             if indentColumns <= 3, let line = quote(range: lineRange, from: first) { return line }
             if let line = listItem(range: lineRange, from: first) { return line }
@@ -290,6 +293,15 @@ enum NoteMarkdownParser {
                 return false
             }
             return marks.allSatisfy { $0 == mark }
+        }
+
+        private var imageReference: NoteImageReference? {
+            let source = String(decoding: units[indentEnd..<end], as: UTF16.self)
+                .trimmingCharacters(in: .whitespaces)
+            guard source.hasPrefix("!["), source.hasSuffix(")"),
+                let separator = source.range(of: "](")
+            else { return nil }
+            return NoteImageReference(destination: String(source[separator.upperBound...].dropLast()))
         }
 
         private func heading(range: NSRange, from first: Int) -> NoteMarkdown.Line? {

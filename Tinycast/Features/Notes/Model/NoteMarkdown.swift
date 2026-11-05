@@ -6,6 +6,7 @@ struct NoteMarkdown: Sendable, Equatable {
         enum Kind: Sendable, Equatable {
             case blank
             case paragraph
+            case image(NoteImageReference)
             case heading(level: Int)
             case bullet
             case ordered(number: Int)

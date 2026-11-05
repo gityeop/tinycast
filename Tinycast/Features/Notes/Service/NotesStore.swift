@@ -7,6 +7,7 @@ final class NotesStore {
         case load(NotesRepository.Failure)
         case save(NotesRepository.Failure)
         case operation(NotesRepository.Failure)
+        case image(NotesRepository.Failure)
     }
 
     private(set) var summaries: [NoteSummary] = []
@@ -142,6 +143,21 @@ final class NotesStore {
         case .failure(let failure):
             publish(.operation(failure))
             return false
+        }
+    }
+
+    func importImage(_ png: Data) async -> NoteImageReference? {
+        let repository = repository
+        let result = await detached {
+            try repository.saveImage(png)
+        } recover: {
+            repository.notesDirectory
+        }
+        switch result {
+        case .success(let image): return image
+        case .failure(let failure):
+            publish(.image(failure))
+            return nil
         }
     }
 

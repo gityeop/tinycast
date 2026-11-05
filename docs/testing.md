@@ -593,9 +593,17 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   nothing, and a link on the caret's line is editable text
 - Return continues and leaves lists and quotes, Tab and Shift-Tab nest, ordered lists renumber, `[] `
   becomes a task, and every formatting shortcut works and undoes in one step
-- Pasting a URL over selected text makes a link; pasting anything else is plain text
-- Copy from a rendered line pastes raw Markdown into another app; a snippet keyword expands inside a
-  rendered note and is styled at once
+- Pasting a URL over selected text makes a link; other text pastes as plain text
+- Paste a clipboard photo. The photo appears immediately with the caret on the following line.
+  Undo removes it and Redo restores it. Hide and reopen Notes, then quit and relaunch, and confirm
+  the photo remains. Resize the window and confirm its aspect ratio and text below it remain correct.
+  Export and import a Notes backup, and confirm the restored photo remains after removing the archive.
+- Copy a text-only rendered line and confirm it pastes raw Markdown. Select Korean text before and
+  after a photo with Select All, then Copy: a rich receiver gets actual image data with both captions;
+  another Notes note imports an independent image in the same order and Undo removes the whole paste.
+  Plain-text paste contains captions without a local image path. Check the actual destination app,
+  since some chat composers accept either text or an image from one clipboard, while others accept both.
+  A snippet keyword expands inside a rendered note and is styled at once.
 - The derived title of an Untitled note shows no Markdown markers
 - A narrow window wraps list items under their text, not under the marker
 - With Render Markdown **off**, the note is fully literal (markers visible, links inert, task syntax

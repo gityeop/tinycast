@@ -102,6 +102,7 @@ struct NotesRepository: Sendable {
     struct Incoming: Sendable, Equatable {
         let title: String
         let source: String
+        var imagesDirectory: URL?
     }
 
     /// Beside the existing notes, never over them; an unusable title is skipped, not fatal.
@@ -110,8 +111,17 @@ struct NotesRepository: Sendable {
             var imported = 0
             for note in notes {
                 guard let base = try? validatedTitle(note.title) else { continue }
+                var source = note.source
+                if let directory = note.imagesDirectory {
+                    for image in images(in: source) {
+                        let data = try Data(contentsOf: image.fileURL(in: directory))
+                        let imported = try saveImage(data)
+                        source = source.replacingOccurrences(
+                            of: image.destination, with: imported.destination)
+                    }
+                }
                 _ = try claimUniqueURL(base: base) {
-                    try writeNewFileAtomically(Data(note.source.utf8), to: $0)
+                    try writeNewFileAtomically(Data(source.utf8), to: $0)
                 }
                 imported += 1
             }
@@ -128,6 +138,40 @@ struct NotesRepository: Sendable {
                 try data.write(to: try validatedFileURL(coordinatedURL), options: .atomic)
             }
         }
+    }
+
+    func saveImage(_ png: Data) throws(Failure) -> NoteImageReference {
+        let image = NoteImageReference()
+        let destination = image.fileURL(in: notesDirectory)
+        return try mappedError(at: destination) {
+            try FileManager.default.createDirectory(
+                at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try png.write(to: destination, options: .atomic)
+            return image
+        }
+    }
+
+    func copyImages(to directory: URL) throws(Failure) {
+        try mappedError(at: notesDirectory) {
+            var copied: Set<NoteImageReference> = []
+            let snapshot = NotesRepository(notesDirectory: directory)
+            for note in try snapshot.list() {
+                for image in images(in: try snapshot.load(note.id).source) where copied.insert(image).inserted {
+                    let destination = image.fileURL(in: directory)
+                    try FileManager.default.createDirectory(
+                        at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try FileManager.default.copyItem(
+                        at: image.fileURL(in: notesDirectory), to: destination)
+                }
+            }
+        }
+    }
+
+    private func images(in source: String) -> Set<NoteImageReference> {
+        Set(NoteMarkdownParser.parse(source).lines.compactMap { line in
+            guard case .image(let image) = line.kind else { return nil }
+            return image
+        })
     }
 
     func rename(id: NoteID, title: String) throws(Failure) -> NoteID {

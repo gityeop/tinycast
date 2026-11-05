@@ -515,6 +515,10 @@ run notes-editor-test      Tinycast/Platform/Signposts.swift \
                            Tinycast/Platform/NotificationToken.swift \
                            Tinycast/Features/TextInjection/Service/InjectableTextView.swift \
                            Tinycast/Features/Notes/Model/NoteDocument.swift \
+                           Tinycast/Features/Notes/Model/NoteImageReference.swift \
+                           Tinycast/Features/Notes/Model/NoteClipboardContent.swift \
+                           Tinycast/Features/Notes/Service/NoteClipboardContentLoader.swift \
+                           Tinycast/Features/Notes/UI/NoteClipboard.swift \
                            Tinycast/Features/Notes/Model/NoteMarkdown.swift \
                            Tinycast/Features/Notes/Model/NoteMarkdownParser.swift \
                            Tinycast/Features/Notes/Model/NoteInlineScanner.swift \
@@ -525,6 +529,7 @@ run notes-editor-test      Tinycast/Platform/Signposts.swift \
                            Tinycast/Features/Notes/Model/NoteRevealPolicy.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownTypography.swift \
                            Tinycast/Features/Notes/UI/NoteBlockDecoration.swift \
+                           Tinycast/Features/Notes/UI/NoteImageLayoutFragment.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownStyler.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownRenderer.swift \
                            Tinycast/Features/Notes/UI/NoteCheckboxGeometry.swift \
@@ -542,6 +547,10 @@ run -O index notes-editor-performance \
                            Tinycast/Platform/NotificationToken.swift \
                            Tinycast/Features/TextInjection/Service/InjectableTextView.swift \
                            Tinycast/Features/Notes/Model/NoteDocument.swift \
+                           Tinycast/Features/Notes/Model/NoteImageReference.swift \
+                           Tinycast/Features/Notes/Model/NoteClipboardContent.swift \
+                           Tinycast/Features/Notes/Service/NoteClipboardContentLoader.swift \
+                           Tinycast/Features/Notes/UI/NoteClipboard.swift \
                            Tinycast/Features/Notes/Model/NoteMarkdown.swift \
                            Tinycast/Features/Notes/Model/NoteMarkdownParser.swift \
                            Tinycast/Features/Notes/Model/NoteInlineScanner.swift \
@@ -552,6 +561,7 @@ run -O index notes-editor-performance \
                            Tinycast/Features/Notes/Model/NoteRevealPolicy.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownTypography.swift \
                            Tinycast/Features/Notes/UI/NoteBlockDecoration.swift \
+                           Tinycast/Features/Notes/UI/NoteImageLayoutFragment.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownStyler.swift \
                            Tinycast/Features/Notes/UI/NoteMarkdownRenderer.swift \
                            Tinycast/Features/Notes/UI/NoteCheckboxGeometry.swift \

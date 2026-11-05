@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 @MainActor
 final class NoteTextView: NSTextView, InjectableTextView {
@@ -136,8 +137,107 @@ final class NoteTextView: NSTextView, InjectableTextView {
     }
 
     override func paste(_ sender: Any?) {
+        guard !pasteContent(from: .general) else { return }
+        guard !pasteImage(from: .general) else { return }
         guard !pasteLink(from: .general) else { return }
         super.paste(sender)
+    }
+
+    override var readablePasteboardTypes: [NSPasteboard.PasteboardType] {
+        [.rtfd, .png, .tiff] + super.readablePasteboardTypes
+    }
+
+    override func readSelection(
+        from pasteboard: NSPasteboard, type: NSPasteboard.PasteboardType
+    ) -> Bool {
+        if type == .rtfd { return pasteContent(from: pasteboard) }
+        if type == .png || type == .tiff { return pasteImage(from: pasteboard) }
+        return super.readSelection(from: pasteboard, type: type)
+    }
+
+    override var writablePasteboardTypes: [NSPasteboard.PasteboardType] {
+        guard let selection = clipboardSelection else { return super.writablePasteboardTypes }
+        let images: [NSPasteboard.PasteboardType] = selection.images.count == 1 ? [.png] : []
+        return [.rtfd, .html] + images + super.writablePasteboardTypes
+    }
+
+    override func copy(_ sender: Any?) {
+        guard clipboardSelection != nil else { return super.copy(sender) }
+        _ = writeSelection(to: .general, types: writablePasteboardTypes)
+    }
+
+    override func writeSelection(
+        to pasteboard: NSPasteboard, types: [NSPasteboard.PasteboardType]
+    ) -> Bool {
+        guard types.contains(.rtfd), let selection = clipboardSelection else {
+            return super.writeSelection(to: pasteboard, types: types)
+        }
+        do {
+            guard let directory = editing?.notesDirectory else { throw CocoaError(.fileNoSuchFile) }
+            let content = try NoteClipboardContentLoader.load(selection, in: directory)
+            let data = try NoteClipboard.encode(content)
+            let item = NSPasteboardItem()
+            guard item.setData(data, forType: .rtfd),
+                item.setString(NoteClipboard.html(content), forType: .html),
+                item.setString(NoteClipboard.plainText(content), forType: .string)
+            else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            if let png = NoteClipboard.singleImage(content), !item.setData(png, forType: .png) {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            pasteboard.clearContents()
+            guard pasteboard.writeObjects([item]) else { throw CocoaError(.fileWriteUnknown) }
+            return true
+        } catch {
+            Logger(subsystem: "com.gityeop.tinycast", category: "Notes")
+                .error("Couldn't copy note content: \(error.localizedDescription, privacy: .private)")
+            editing?.clipboardCopyFailed()
+            return false
+        }
+    }
+
+    private var clipboardSelection: NoteClipboardSelection? {
+        NoteClipboardSelection(source: string, range: selectedRange())
+    }
+
+    private func pasteContent(from pasteboard: NSPasteboard) -> Bool {
+        guard isEditable, !hasMarkedText(), let data = pasteboard.data(forType: .rtfd) else { return false }
+        do {
+            let content = try NoteClipboard.decode(data)
+            if !content.parts.contains(where: { if case .image = $0 { true } else { false } }),
+                pasteLink(from: pasteboard)
+            {
+                return true
+            }
+            editing?.pasteContent(content)
+        } catch {
+            Logger(subsystem: "com.gityeop.tinycast", category: "Notes")
+                .error("Couldn't read note clipboard: \(error.localizedDescription, privacy: .private)")
+            editing?.imagePasteFailed()
+        }
+        return true
+    }
+
+    func pasteImage(from pasteboard: NSPasteboard) -> Bool {
+        guard isEditable, !hasMarkedText(),
+            pasteboard.canReadObject(forClasses: [NSImage.self], options: nil)
+        else { return false }
+        guard let image = NSImage(pasteboard: pasteboard), let tiff = image.tiffRepresentation,
+            let bitmap = NSBitmapImageRep(data: tiff),
+            let png = bitmap.representation(using: .png, properties: [:])
+        else {
+            editing?.imagePasteFailed()
+            return true
+        }
+        editing?.pasteImage(png)
+        return true
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        let changed = frame.width != newSize.width
+        super.setFrameSize(newSize)
+        if changed { editing?.layoutWidthChanged() }
     }
 
     /// Pasting a lone URL over selected text makes a link; anything else pastes as plain text.

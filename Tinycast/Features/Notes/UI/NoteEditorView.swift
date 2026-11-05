@@ -1,9 +1,14 @@
 import AppKit
 import SwiftUI
+import OSLog
 
 struct NoteEditorView: NSViewRepresentable {
     let input: NoteEditorInput
     let rendersMarkdown: Bool
+    var notesDirectory: URL?
+    var onImportImage: ((Data) async -> NoteImageReference?)?
+    var onImagePasteFailure: (() -> Void)?
+    var onClipboardCopyFailure: (() -> Void)?
     let onSourceChange: (String) -> Void
     let onCharacterCountChange: (NoteEditorInput, Int) -> Void
     let onFormattingChange: (NoteEditorInput, NoteFormatting) -> Void
@@ -36,6 +41,7 @@ struct NoteEditorView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.setNotesDirectory(notesDirectory)
         context.coordinator.update(input)
         context.coordinator.setRendersMarkdown(rendersMarkdown)
     }
@@ -60,6 +66,7 @@ struct NoteEditorView: NSViewRepresentable {
             self.parent = parent
             input = parent.input
             renderer = NoteMarkdownRenderer(isEnabled: parent.rendersMarkdown)
+            renderer.notesDirectory = parent.notesDirectory
         }
 
         private func attach() {
@@ -80,6 +87,13 @@ struct NoteEditorView: NSViewRepresentable {
             if wasEmpty != input.source.isEmpty { textView.needsDisplay = true }
             textView.setSelectedRange(NSRange(location: selectionLocation, length: 0))
             renderer.reset()
+            if let index = renderer.markdown.lineIndex(at: selectionLocation) {
+                let line = renderer.markdown.lines[index]
+                if case .image = line.kind, NSMaxRange(line.range) > NSMaxRange(line.contentRange) {
+                    textView.setSelectedRange(NSRange(location: NSMaxRange(line.range), length: 0))
+                    renderer.selectionDidChange()
+                }
+            }
             isInstalling = false
             if resetUndo { editorUndoManager.removeAllActions() }
             reportCharacterCount()
@@ -101,6 +115,72 @@ struct NoteEditorView: NSViewRepresentable {
             renderer.isEnabled = rendersMarkdown
             renderer.reset()
             reportFormatting()
+        }
+
+        func setNotesDirectory(_ directory: URL?) {
+            guard renderer.notesDirectory != directory else { return }
+            renderer.notesDirectory = directory
+            renderer.reset()
+        }
+
+        func pasteImage(_ png: Data) {
+            pasteContent(NoteClipboardContent(parts: [.image(png)]))
+        }
+
+        func pasteContent(_ content: NoteClipboardContent) {
+            guard let textView else { return }
+            let expected = input
+            let source = textView.string
+            let selection = textView.selectedRange()
+            Task { [weak self, weak textView] in
+                guard let self, let textView else { return }
+                var replacement = ""
+                let text = source as NSString
+                for (index, part) in content.parts.enumerated() {
+                    switch part {
+                    case .text(let text):
+                        if index > 0, case .image = content.parts[index - 1], text.hasPrefix("\n") {
+                            replacement += text.dropFirst()
+                        } else {
+                            replacement += text
+                        }
+                    case .image(let png):
+                        guard let importImage = parent.onImportImage,
+                            let image = await importImage(png)
+                        else { return }
+                        let followsText = replacement.isEmpty
+                            ? selection.location > 0 && text.character(at: selection.location - 1) != 10
+                            : !replacement.hasSuffix("\n")
+                        if followsText { replacement += "\n" }
+                        replacement += image.markdown + "\n"
+                    }
+                }
+                guard input == expected, textView.string == source,
+                    textView.selectedRange() == selection
+                else {
+                    imagePasteFailed()
+                    return
+                }
+                textView.performEdit(NoteEditPlan(
+                    range: selection, replacement: replacement,
+                    selection: NSRange(
+                        location: selection.location + (replacement as NSString).length, length: 0)))
+                textView.scrollRangeToVisible(textView.selectedRange())
+            }
+        }
+
+        func imagePasteFailed() {
+            Logger(subsystem: "com.gityeop.tinycast", category: "Notes")
+                .error("Couldn't paste note image")
+            parent.onImagePasteFailure?()
+        }
+
+        func clipboardCopyFailed() {
+            parent.onClipboardCopyFailure?()
+        }
+
+        func layoutWidthChanged() {
+            renderer.reset()
         }
 
         func textDidChange(_ notification: Notification) {
@@ -147,6 +227,7 @@ struct NoteEditorView: NSViewRepresentable {
         }
 
         var rendersMarkdown: Bool { renderer.isEnabled }
+        var notesDirectory: URL? { parent.notesDirectory }
 
         var markdown: NoteMarkdown { renderer.syncedMarkdown() }
 

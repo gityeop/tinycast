@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OSLog
 
 @MainActor
 @Observable
@@ -80,6 +81,7 @@ final class NotesCoordinator {
 
     var activeTitle: String { store.activeTitle }
     var rendersMarkdown: Bool { settings.notesRendersMarkdown }
+    var notesDirectory: URL { store.notesDirectory }
     var showsFormattingBar: Bool { settings.notesRendersMarkdown && settings.notesShowsFormattingBar }
     var isSearching: Bool { store.isSearching }
     var visibleNotes: [NoteSummary] {
@@ -335,6 +337,28 @@ final class NotesCoordinator {
         store.updateSource(source)
     }
 
+    func importImage(_ png: Data) async -> NoteImageReference? {
+        await store.importImage(png)
+    }
+
+    func imagePasteFailed() {
+        Task {
+            _ = await core.reportFailure(
+                title: "Couldn't Paste Image",
+                message: "The image could not be added. Please try pasting it again.",
+                symbol: "photo", recovery: nil)
+        }
+    }
+
+    func clipboardCopyFailed() {
+        Task {
+            _ = await core.reportFailure(
+                title: "Couldn't Copy Note",
+                message: "The note could not be copied. Please try again.",
+                symbol: "doc.on.clipboard", recovery: nil)
+        }
+    }
+
     func updateCharacterCount(_ input: NoteEditorInput, _ count: Int) {
         guard input == editorInput else { return }
         characterCount = count
@@ -468,6 +492,13 @@ final class NotesCoordinator {
         issueTask = Task { [weak self] in
             guard let self else { return }
             switch issue {
+            case .image(let failure):
+                Logger(subsystem: "com.gityeop.tinycast", category: "Notes")
+                    .error("Couldn't save pasted image: \(failure.localizedDescription, privacy: .private)")
+                _ = await core.reportFailure(
+                    title: "Couldn't Paste Image",
+                    message: "The image could not be saved. Please try pasting it again.",
+                    symbol: "photo", recovery: nil)
             case .load(let failure):
                 let retry = await core.reportFailure(
                     title: "Couldn't Open Note",

@@ -12,6 +12,8 @@ struct NotesEditorTests {
         _ = NSApplication.shared
         testLiteralEditingAndNativeCommands(rendersMarkdown: false)
         testLiteralEditingAndNativeCommands(rendersMarkdown: true)
+        await testClipboardImages()
+        await testRichClipboardCopy()
         testNewlineScrolling()
         testUndoKeyboardShortcuts(rendersMarkdown: false)
         testUndoKeyboardShortcuts(rendersMarkdown: true)
@@ -116,6 +118,177 @@ struct NotesEditorTests {
                 }
             }
         }
+    }
+
+    private static func testClipboardImages() async {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let image = NoteImageReference()
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        let photo = NSImage(size: NSSize(width: 400, height: 200), flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            return true
+        }
+        check("image fixture reaches the clipboard", pasteboard.writeObjects([photo]))
+        let input = NoteEditorInput(id: NoteID(rawValue: "Photo.md"), source: "Before", epoch: 1)
+        var source = input.source
+        let editor = makeEditor(input: input, rendersMarkdown: true, onSourceChange: { source = $0 })
+        editor.coordinator.setNotesDirectory(root)
+        editor.coordinator.parent.onImportImage = { png in
+            do {
+                let file = image.fileURL(in: root)
+                try FileManager.default.createDirectory(
+                    at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try png.write(to: file)
+                return image
+            } catch {
+                check("image fixture saves", false)
+                return nil
+            }
+        }
+        editor.textView.setSelectedRange(NSRange(location: 6, length: 0))
+        check("native Paste accepts clipboard images", editor.textView.readSelection(from: pasteboard))
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while (editor.textView.textStorage?.length ?? 0) <= 7
+            || editor.textView.textStorage?.attribute(.noteImage, at: 7, effectiveRange: nil) == nil,
+            ContinuousClock.now < deadline
+        {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        check("image paste inserts ordinary Markdown", source == "Before\n\(image.markdown)\n")
+        check("image rendering preserves the complete source", editor.textView.string == source)
+        let decoration = editor.textView.textStorage?.attribute(.noteImage, at: 7, effectiveRange: nil)
+            as? NoteImageDecoration
+        check("photo receives visible layout space", decoration?.size.height == 144)
+        check("photo uses a drawing fragment", layoutFragments(in: editor.textView)[7] is NoteImageLayoutFragment)
+        if let fragment = layoutFragments(in: editor.textView)[7],
+            let bitmap = NSBitmapImageRep(
+                bitmapDataPlanes: nil, pixelsWide: 320, pixelsHigh: 200,
+                bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+            let graphics = NSGraphicsContext(bitmapImageRep: bitmap)
+        {
+            graphics.cgContext.translateBy(x: 0, y: 200)
+            graphics.cgContext.scaleBy(x: 1, y: -1)
+            graphics.cgContext.clip(to: fragment.renderingSurfaceBounds)
+            fragment.draw(at: .zero, in: graphics.cgContext)
+            let pixel = bitmap.colorAt(x: 50, y: 50)?.usingColorSpace(.deviceRGB)
+            check("photo paints visible pixels within TextKit's clip", (pixel?.alphaComponent ?? 0) > 0.9)
+        }
+        editor.coordinator.editorUndoManager.undo()
+        check("Undo removes the image insertion", editor.textView.string == "Before")
+        editor.coordinator.editorUndoManager.redo()
+        check("Redo restores the photo source", editor.textView.string.contains(image.markdown))
+
+        let photoOnlySource = image.markdown + "\n"
+        let reopened = makeEditor(
+            input: NoteEditorInput(id: input.id, source: photoOnlySource, epoch: 2), rendersMarkdown: true)
+        reopened.coordinator.setNotesDirectory(root)
+        let reopenDeadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while reopened.textView.textStorage?.attribute(.noteImage, at: 0, effectiveRange: nil) == nil,
+            ContinuousClock.now < reopenDeadline
+        {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        check(
+            "reopened editor resolves the saved photo",
+            reopened.textView.textStorage?.attribute(.noteImage, at: 0, effectiveRange: nil) != nil)
+        reopened.coordinator.setRendersMarkdown(false)
+        check("rendering off retains literal image source", reopened.textView.string == photoOnlySource)
+        check(
+            "rendering off removes image decoration",
+            reopened.textView.textStorage?.attribute(.noteImage, at: 0, effectiveRange: nil) == nil)
+    }
+
+    private static func testRichClipboardCopy() async {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let photo = NSImage(size: NSSize(width: 48, height: 24), flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            return true
+        }
+        guard let tiff = photo.tiffRepresentation, let bitmap = NSBitmapImageRep(data: tiff),
+            let png = bitmap.representation(using: .png, properties: [:])
+        else { return check("rich copy fixture has image bytes", false) }
+        do {
+            let image = NoteImageReference()
+            let file = image.fileURL(in: root)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try png.write(to: file)
+            let source = "사진 앞 한국어 문장\n\(image.markdown)\n사진 뒤 한국어 문장\n"
+            let editor = makeEditor(
+                input: NoteEditorInput(id: NoteID(rawValue: "Copy.md"), source: source, epoch: 1),
+                rendersMarkdown: true)
+            editor.coordinator.parent.notesDirectory = root
+            editor.textView.selectAll(nil)
+            let pasteboard = NSPasteboard.withUniqueName()
+            defer { pasteboard.releaseGlobally() }
+            copySelection(of: editor.textView, to: pasteboard)
+            guard let data = pasteboard.data(forType: .rtfd) else {
+                return check("native Copy publishes rich image content", false)
+            }
+            let rich = try NSAttributedString(
+                data: data, options: [.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)
+            check("rich Copy preserves Korean text and photo order", rich.string == "사진 앞 한국어 문장\n\u{FFFC}\n사진 뒤 한국어 문장\n")
+            let attachmentRange = (rich.string as NSString).range(of: "\u{FFFC}")
+            let attachment = rich.attribute(.attachment, at: attachmentRange.location, effectiveRange: nil)
+                as? NSTextAttachment
+            check("rich Copy embeds PNG bytes", attachment?.fileWrapper?.regularFileContents == png)
+            check("image clipboard also exposes its PNG", pasteboard.data(forType: .png) == png)
+            check(
+                "HTML clipboard embeds its photo",
+                pasteboard.string(forType: .html)?.contains("data:image/png;base64,") == true)
+            check(
+                "plain clipboard text contains captions without local image paths",
+                pasteboard.string(forType: .string) == "사진 앞 한국어 문장\n\n사진 뒤 한국어 문장\n")
+            check("Copy leaves editor source unchanged", editor.textView.string == source)
+            let indented = NoteClipboardContent(parts: [.text("    사진  설명\n  다음 줄")])
+            let html = Data(NoteClipboard.html(indented).utf8)
+            let importedHTML = try NSAttributedString(
+                data: html, options: [.documentType: NSAttributedString.DocumentType.html],
+                documentAttributes: nil)
+            check("HTML import preserves indentation and repeated spaces", importedHTML.string.contains("    사진  설명"))
+
+            let target = makeEditor(
+                input: NoteEditorInput(id: NoteID(rawValue: "Pasted.md"), source: "", epoch: 1),
+                rendersMarkdown: true)
+            target.coordinator.parent.onImportImage = { data in
+                let imported = NoteImageReference()
+                do {
+                    try data.write(to: imported.fileURL(in: root))
+                    return imported
+                } catch {
+                    check("mixed paste saves its photo", false)
+                    return nil
+                }
+            }
+            check("native Paste accepts the rich photo and text", target.textView.readSelection(from: pasteboard))
+            let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+            while !target.textView.string.contains("사진 뒤 한국어 문장"), ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(20))
+            }
+            let lines = NoteMarkdownParser.parse(target.textView.string).lines
+            check("Notes paste preserves text before the photo", target.textView.string.hasPrefix("사진 앞 한국어 문장\n"))
+            check("Notes paste preserves text after the photo", target.textView.string.hasSuffix("\n사진 뒤 한국어 문장\n"))
+            if lines.count > 1, case .image(let imported) = lines[1].kind {
+                check("Notes paste creates an independent image", imported != image)
+                check(
+                    "Notes paste persists the actual photo",
+                    NSImage(contentsOf: imported.fileURL(in: root))?.size == photo.size)
+            } else { check("Notes paste includes the image between its text", false) }
+            target.coordinator.editorUndoManager.undo()
+            check("mixed paste undoes as one edit", target.textView.string.isEmpty)
+
+            editor.textView.setSelectedRange(NSRange(location: 0, length: 5))
+            copySelection(of: editor.textView, to: pasteboard)
+            check("text-only selection stays native plain text", pasteboard.data(forType: .rtfd) == nil)
+            check(
+                "text-only Copy preserves its source",
+                pasteboard.string(forType: .string) == (source as NSString).substring(to: 5))
+        } catch { check("rich clipboard round trip completes: \(error)", false) }
     }
 
     private static func testUndoKeyboardShortcuts(rendersMarkdown: Bool) {

@@ -39,6 +39,7 @@ enum NoteTitle {
     ) -> String {
         switch line.kind {
         case .blank, .rule, .fenceOpen, .fenceClose: return ""
+        case .image: return "Image"
         default: break
         }
         var visible = ""

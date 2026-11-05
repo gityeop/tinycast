@@ -7,7 +7,8 @@ commands and global shortcuts can show, search, or extend the collection.
 ## Invariants
 
 - **One regular, non-hidden `.md` file is one note.** Its filename without the extension is its title;
-  the source contains no frontmatter, embedded ID, or title field, and there is no database or sidecar.
+  the source contains no frontmatter, embedded ID, or title field. Pasted photos live in `images/`
+  beside the Markdown files and are referenced by relative Markdown paths.
 - **A note the user has not named shows its first line instead.** Only the names `create` claims yield
   it, it is presentation and nothing else, and naming the note replaces it.
 - **The storage is the source.** The string in `NSTextView`, `NotesStore`, search, and the file are
@@ -155,7 +156,8 @@ asked for, which is all the styler, the editing rules and `NoteTitle` ever need.
 
 It covers headings 1 to 6 (4 to 6 look like 3), bold, italic, bold italic, strikethrough, inline code,
 links, bare `http` and `https` URLs, bullet, numbered and task lists with nesting, quotes, fenced code
-blocks and horizontal rules. Inline spans never cross a line. Images, underline, HTML, setext headings,
+blocks and horizontal rules. Inline spans never cross a line. Unsupported image destinations,
+underline, HTML, setext headings,
 indented code, footnotes, reference links and blocks nested inside quotes stay plain text. A GFM table
 (a pipe row, a delimiter row with as many cells, then the pipe rows after it) also stays plain text, but
 is recognised so it gets no inline styling: it shows in the code font, with wrapped rows hanging under
@@ -204,6 +206,31 @@ glyphs. There are no text attachments, overlay controls, `NSTextList`, `NSTextTa
 
 ### Editing
 
+Pasting a clipboard image saves a PNG as `images/<UUID>.png` and inserts a standalone
+`![Image](images/<UUID>.png)` paragraph. The caret moves to the following line so the photo appears
+immediately when Render Markdown is on. Image paragraphs fit the editor width without changing their
+aspect ratio. Moving the caret onto the image paragraph reveals its short Markdown source.
+Opening a note places a caret that would start on an image paragraph onto the following line,
+so a saved photo is visible on reopening too.
+With Render Markdown off, the reference stays literal. Text and selected-text URL paste retain their
+existing behavior.
+
+`NotesRepository` writes the PNG off the main actor through `NotesStore.importImage`. The editor applies
+the reference through `performEdit`, so Undo, Redo, and autosave use the same path as text. Undo removes
+the reference but retains the file for Redo. Renaming a note leaves image references intact. Notes
+backups include referenced images, and importing assigns new image identities beside existing notes.
+Image rendering uses a dedicated TextKit fragment and paragraph height, while the source stays exact.
+The text view registers RTFD, PNG and TIFF as readable pasteboard types, so AppKit enables its native
+Paste menu and shortcut for rich and image-only clipboards. RTFD is read first: its ordered text and
+image attachments become one replacement, with new local image files and one Undo step.
+
+Copying a selection that includes complete image paragraphs publishes actual PNG attachments in RTFD
+and embedded images in HTML, preserving the surrounding source text and its order. A single image also
+publishes PNG for image paste targets. Plain text contains the surrounding text without local image
+paths. Image-free selections retain native Markdown Copy. Copy prepares every representation before
+replacing the clipboard and completes synchronously before returning. It never changes the note source.
+Receiving applications choose which representation to accept; attachment and text handling varies.
+
 `Model/NoteMarkdownEditing` turns a gesture into a `NoteEditPlan`, one replacement plus the selection
 after it. Nil means AppKit handles the key natively. `NoteTextView.performEdit` applies a plan through
 `shouldChangeText`, `replaceCharacters` and `didChangeText`, so each gesture is one undo step and
@@ -241,8 +268,8 @@ collide. In a note, ⌘E replaces AppKit's Use Selection for Find.
 Command-Z and Shift-Command-Z go directly to the editor's undo manager, including with rendering off,
 because the non-activating panel cannot rely on the frontmost application's Undo menu.
 
-AppKit still owns typing, selection, Cut, Copy, Paste, Select All, Find, marked text, emoji, combining
-characters and undo grouping. Copy yields raw Markdown and VoiceOver reads the source. Changing the note
+AppKit still owns typing, selection, text-only Copy and Paste, Select All, Find, marked text, emoji,
+combining characters and undo grouping. VoiceOver reads the source. Changing the note
 identity or editor epoch reinstalls and restyles the string and clears the previous document's undo
 history. Snippets expand through `insertText` and are styled like typed text. The empty-note placeholder
 is drawn in the text view, so opening the find bar moves it with the editor content.

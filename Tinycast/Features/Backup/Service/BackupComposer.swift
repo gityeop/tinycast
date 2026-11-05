@@ -68,6 +68,7 @@ enum BackupComposer {
         if let directory = plan.notesDirectory {
             counts[BackupCategory.notes.rawValue] = try copyDocuments(
                 from: directory, to: bundle.notesDirectory)
+            try NotesRepository(notesDirectory: directory).copyImages(to: bundle.notesDirectory)
         }
         if !plan.learning.isEmpty {
             for (part, data) in plan.learning { try bundle.write(data, to: bundle.learningURL(part)) }

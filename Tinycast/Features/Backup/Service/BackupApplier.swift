@@ -108,7 +108,8 @@ enum BackupApplier {
         return await core.notesStore.importNotes(
             documents.map {
                 NotesRepository.Incoming(
-                    title: ($0.name as NSString).deletingPathExtension, source: $0.contents)
+                    title: ($0.name as NSString).deletingPathExtension, source: $0.contents,
+                    imagesDirectory: bundle.notesDirectory)
             })
     }
 

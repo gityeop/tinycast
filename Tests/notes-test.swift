@@ -8,6 +8,7 @@ struct NotesTests {
 
     static func main() async throws {
         try testRepositoryAndSearch()
+        try testImagePersistenceAndBackup()
         testDerivedTitles()
         testMarkdownParser()
         testMarkdownEditing()
@@ -137,6 +138,51 @@ struct NotesTests {
         check(
             "loading an empty collection creates no file",
             (try FileManager.default.contentsOfDirectory(atPath: empty.notesDirectory.path)).isEmpty)
+    }
+
+    private static func testImagePersistenceAndBackup() throws {
+        let root = temporaryRoot("images")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let original = try repository(in: root)
+        let bytes = Data([137, 80, 78, 71])
+        let image = try original.saveImage(bytes)
+        let note = try original.create()
+        let source = "Photo\n\(image.markdown)\nText after photo\n"
+        try original.save(id: note.id, source: source)
+        let renamed = try original.rename(id: note.id, title: "Photo note")
+        check("image Markdown survives save and rename", try original.load(renamed).source == source)
+        check("image bytes survive reopen", try Data(contentsOf: image.fileURL(in: original.notesDirectory)) == bytes)
+        check("image assets do not appear as notes", try original.list().count == 1)
+        let markdown = NoteMarkdownParser.parse(source)
+        check("standalone image is a named block", markdown.lines[1].kind == .image(image))
+        let fenced = NoteMarkdownParser.parse("```\n\(image.markdown)\n```\n")
+        check("image Markdown in code stays literal", fenced.lines[1].kind == .code)
+        check("image paths cannot escape the notes folder", NoteImageReference(destination: "images/../outside.png") == nil)
+
+        let backup = root.appendingPathComponent("Backup")
+        try FileManager.default.createDirectory(at: backup, withIntermediateDirectories: true)
+        try source.write(to: backup.appendingPathComponent("Photo note.md"), atomically: true, encoding: .utf8)
+        let laterImage = try original.saveImage(Data([1, 2, 3]))
+        try original.save(id: renamed, source: laterImage.markdown)
+        try original.copyImages(to: backup)
+        check(
+            "backup copies images from its Markdown snapshot",
+            try Data(contentsOf: image.fileURL(in: backup)) == bytes)
+        let restored = NotesRepository(notesDirectory: root.appendingPathComponent("Restored"))
+        let count = try restored.importNotes([
+            .init(title: "Photo note", source: source, imagesDirectory: backup)
+        ])
+        let loaded = try require(restored.load(preferredID: nil).1)
+        let restoredMarkdown = NoteMarkdownParser.parse(loaded.source)
+        guard case .image(let restoredImage) = restoredMarkdown.lines[1].kind else {
+            check("restored image reference exists", false)
+            return
+        }
+        check("backup imports the note", count == 1)
+        check("backup import gives images independent identities", restoredImage != image)
+        check(
+            "restored photo is independent of the backup",
+            try Data(contentsOf: restoredImage.fileURL(in: restored.notesDirectory)) == bytes)
     }
 
     private static func testDerivedTitles() {
